@@ -144,7 +144,7 @@ mpd_version(void)
 
 #ifdef CONFIG_64
 /* Digits in a word, primarily useful for the most significant word. */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE*/ int
 mpd_word_digits(mpd_uint_t word)
 {
     if (word < mpd_pow10[9]) {
@@ -181,7 +181,7 @@ mpd_word_digits(mpd_uint_t word)
     return (word < mpd_pow10[19]) ? 19 : 20;
 }
 #else
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_word_digits(mpd_uint_t word)
 {
     if (word < mpd_pow10[4]) {
@@ -203,28 +203,28 @@ mpd_word_digits(mpd_uint_t word)
 
 
 /* Adjusted exponent */
-ALWAYS_INLINE mpd_ssize_t
+/* ALWAYS_INLINE */ mpd_ssize_t
 mpd_adjexp(const mpd_t *dec)
 {
     return (dec->exp + dec->digits) - 1;
 }
 
 /* Etiny */
-ALWAYS_INLINE mpd_ssize_t
+/* ALWAYS_INLINE */ mpd_ssize_t
 mpd_etiny(const mpd_context_t *ctx)
 {
     return ctx->emin - (ctx->prec - 1);
 }
 
 /* Etop: used for folding down in IEEE clamping */
-ALWAYS_INLINE mpd_ssize_t
+/* ALWAYS_INLINE */ mpd_ssize_t
 mpd_etop(const mpd_context_t *ctx)
 {
     return ctx->emax - (ctx->prec - 1);
 }
 
 /* Most significant word */
-ALWAYS_INLINE mpd_uint_t
+/* ALWAYS_INLINE */ mpd_uint_t
 mpd_msword(const mpd_t *dec)
 {
     assert(dec->len > 0);
@@ -242,7 +242,7 @@ mpd_msd(mpd_uint_t word)
 }
 
 /* Least significant digit of a word */
-ALWAYS_INLINE mpd_uint_t
+/* ALWAYS_INLINE */ mpd_uint_t
 mpd_lsd(mpd_uint_t word)
 {
     return word % 10;
@@ -267,7 +267,7 @@ mpd_exp_digits(mpd_ssize_t exp)
 }
 
 /* Canonical */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_iscanonical(const mpd_t *dec)
 {
     (void)dec;
@@ -275,77 +275,77 @@ mpd_iscanonical(const mpd_t *dec)
 }
 
 /* Finite */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isfinite(const mpd_t *dec)
 {
     return !(dec->flags & MPD_SPECIAL);
 }
 
 /* Infinite */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isinfinite(const mpd_t *dec)
 {
     return dec->flags & MPD_INF;
 }
 
 /* NaN */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isnan(const mpd_t *dec)
 {
     return dec->flags & (MPD_NAN|MPD_SNAN);
 }
 
 /* Negative */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isnegative(const mpd_t *dec)
 {
     return dec->flags & MPD_NEG;
 }
 
 /* Positive */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_ispositive(const mpd_t *dec)
 {
     return !(dec->flags & MPD_NEG);
 }
 
 /* qNaN */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isqnan(const mpd_t *dec)
 {
     return dec->flags & MPD_NAN;
 }
 
 /* Signed */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_issigned(const mpd_t *dec)
 {
     return dec->flags & MPD_NEG;
 }
 
 /* sNaN */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_issnan(const mpd_t *dec)
 {
     return dec->flags & MPD_SNAN;
 }
 
 /* Special */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isspecial(const mpd_t *dec)
 {
     return dec->flags & MPD_SPECIAL;
 }
 
 /* Zero */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_iszero(const mpd_t *dec)
 {
     return !mpd_isspecial(dec) && mpd_msword(dec) == 0;
 }
 
 /* Test for zero when specials have been ruled out already */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_iszerocoeff(const mpd_t *dec)
 {
     return mpd_msword(dec) == 0;
@@ -372,77 +372,77 @@ mpd_issubnormal(const mpd_t *dec, const mpd_context_t *ctx)
 }
 
 /* Odd word */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isoddword(mpd_uint_t word)
 {
     return word & 1;
 }
 
 /* Odd coefficient */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isoddcoeff(const mpd_t *dec)
 {
     return mpd_isoddword(dec->data[0]);
 }
 
 /* 0 if dec is positive, 1 if dec is negative */
-ALWAYS_INLINE uint8_t
+/* ALWAYS_INLINE */ uint8_t
 mpd_sign(const mpd_t *dec)
 {
     return dec->flags & MPD_NEG;
 }
 
 /* 1 if dec is positive, -1 if dec is negative */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_arith_sign(const mpd_t *dec)
 {
     return 1 - 2 * mpd_isnegative(dec);
 }
 
 /* Radix */
-ALWAYS_INLINE long
+/* ALWAYS_INLINE */ long
 mpd_radix(void)
 {
     return 10;
 }
 
 /* Dynamic decimal */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isdynamic(const mpd_t *dec)
 {
     return !(dec->flags & MPD_STATIC);
 }
 
 /* Static decimal */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isstatic(const mpd_t *dec)
 {
     return dec->flags & MPD_STATIC;
 }
 
 /* Data of decimal is dynamic */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isdynamic_data(const mpd_t *dec)
 {
     return !(dec->flags & MPD_DATAFLAGS);
 }
 
 /* Data of decimal is static */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isstatic_data(const mpd_t *dec)
 {
     return dec->flags & MPD_STATIC_DATA;
 }
 
 /* Data of decimal is shared */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isshared_data(const mpd_t *dec)
 {
     return dec->flags & MPD_SHARED_DATA;
 }
 
 /* Data of decimal is const */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_isconst_data(const mpd_t *dec)
 {
     return dec->flags & MPD_CONST_DATA;
@@ -454,7 +454,7 @@ mpd_isconst_data(const mpd_t *dec)
 /******************************************************************************/
 
 /* Fill destination with zeros */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_uint_zero(mpd_uint_t *dest, mpd_size_t len)
 {
     mpd_size_t i;
@@ -465,7 +465,7 @@ mpd_uint_zero(mpd_uint_t *dest, mpd_size_t len)
 }
 
 /* Free a decimal */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_del(mpd_t *dec)
 {
     if (mpd_isdynamic_data(dec)) {
@@ -500,7 +500,7 @@ mpd_del(mpd_t *dec)
  *
  * [1] In that case the old (now oversized) area is still valid.
  */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_qresize(mpd_t *result, mpd_ssize_t nwords, uint32_t *status)
 {
     assert(!mpd_isconst_data(result)); /* illegal operation for a const */
@@ -522,7 +522,7 @@ mpd_qresize(mpd_t *result, mpd_ssize_t nwords, uint32_t *status)
 }
 
 /* Same as mpd_qresize, but do not set the result no NaN on failure. */
-static ALWAYS_INLINE int
+static /* ALWAYS_INLINE */ int
 mpd_qresize_cxx(mpd_t *result, mpd_ssize_t nwords)
 {
     assert(!mpd_isconst_data(result)); /* illegal operation for a const */
@@ -545,7 +545,7 @@ mpd_qresize_cxx(mpd_t *result, mpd_ssize_t nwords)
 
 /* Same as mpd_qresize, but the complete coefficient (including the old
  * memory area!) is initialized to zero. */
-ALWAYS_INLINE int
+/* ALWAYS_INLINE */ int
 mpd_qresize_zero(mpd_t *result, mpd_ssize_t nwords, uint32_t *status)
 {
     assert(!mpd_isconst_data(result)); /* illegal operation for a const */
@@ -574,7 +574,7 @@ mpd_qresize_zero(mpd_t *result, mpd_ssize_t nwords, uint32_t *status)
  * the old memory area is always big enough, so checking for MPD_Malloc_error
  * is not imperative.
  */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_minalloc(mpd_t *result)
 {
     assert(!mpd_isconst_data(result)); /* illegal operation for a const */
@@ -626,7 +626,7 @@ mpd_setdigits(mpd_t *result)
 }
 
 /* Set sign */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_sign(mpd_t *result, uint8_t sign)
 {
     result->flags &= ~MPD_NEG;
@@ -634,7 +634,7 @@ mpd_set_sign(mpd_t *result, uint8_t sign)
 }
 
 /* Copy sign from another decimal */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_signcpy(mpd_t *result, const mpd_t *a)
 {
     uint8_t sign = a->flags&MPD_NEG;
@@ -644,7 +644,7 @@ mpd_signcpy(mpd_t *result, const mpd_t *a)
 }
 
 /* Set infinity */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_infinity(mpd_t *result)
 {
     result->flags &= ~MPD_SPECIAL;
@@ -652,7 +652,7 @@ mpd_set_infinity(mpd_t *result)
 }
 
 /* Set qNaN */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_qnan(mpd_t *result)
 {
     result->flags &= ~MPD_SPECIAL;
@@ -660,7 +660,7 @@ mpd_set_qnan(mpd_t *result)
 }
 
 /* Set sNaN */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_snan(mpd_t *result)
 {
     result->flags &= ~MPD_SPECIAL;
@@ -668,42 +668,42 @@ mpd_set_snan(mpd_t *result)
 }
 
 /* Set to negative */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_negative(mpd_t *result)
 {
     result->flags |= MPD_NEG;
 }
 
 /* Set to positive */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_positive(mpd_t *result)
 {
     result->flags &= ~MPD_NEG;
 }
 
 /* Set to dynamic */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_dynamic(mpd_t *result)
 {
     result->flags &= ~MPD_STATIC;
 }
 
 /* Set to static */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_static(mpd_t *result)
 {
     result->flags |= MPD_STATIC;
 }
 
 /* Set data to dynamic */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_dynamic_data(mpd_t *result)
 {
     result->flags &= ~MPD_DATAFLAGS;
 }
 
 /* Set data to static */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_static_data(mpd_t *result)
 {
     result->flags &= ~MPD_DATAFLAGS;
@@ -711,7 +711,7 @@ mpd_set_static_data(mpd_t *result)
 }
 
 /* Set data to shared */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_shared_data(mpd_t *result)
 {
     result->flags &= ~MPD_DATAFLAGS;
@@ -719,7 +719,7 @@ mpd_set_shared_data(mpd_t *result)
 }
 
 /* Set data to const */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_const_data(mpd_t *result)
 {
     result->flags &= ~MPD_DATAFLAGS;
@@ -727,14 +727,14 @@ mpd_set_const_data(mpd_t *result)
 }
 
 /* Clear flags, preserving memory attributes. */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_clear_flags(mpd_t *result)
 {
     result->flags &= (MPD_STATIC|MPD_DATAFLAGS);
 }
 
 /* Set flags, preserving memory attributes. */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_set_flags(mpd_t *result, uint8_t flags)
 {
     result->flags &= (MPD_STATIC|MPD_DATAFLAGS);
@@ -742,7 +742,7 @@ mpd_set_flags(mpd_t *result, uint8_t flags)
 }
 
 /* Copy flags, preserving memory attributes of result. */
-ALWAYS_INLINE void
+/* ALWAYS_INLINE */ void
 mpd_copy_flags(mpd_t *result, const mpd_t *a)
 {
     uint8_t aflags = a->flags;
@@ -1726,9 +1726,9 @@ _mpd_rnd_incr(const mpd_t *dec, mpd_uint_t rnd, const mpd_context_t *ctx)
         ld = (int)mpd_lsd(dec->data[0]);
         return (!(rnd == 0) && (ld == 0 || ld == 5));
     default:
-        /* Without a valid context, further results will be undefined. */
-        return 0; /* GCOV_NOT_REACHED */
     }
+    /* Without a valid context, further results will be undefined. */
+    return 0; /* GCOV_NOT_REACHED */
 }
 
 /*
@@ -2176,21 +2176,21 @@ _mpd_basecmp(mpd_uint_t *big, mpd_uint_t *small, mpd_size_t n, mpd_size_t m,
         --m; --n;
         _mpd_divmod_pow10(&h, &lprev, small[m--], MPD_RDIGITS-r);
         if (h != 0) {
-            CMP_EQUAL_OR_RETURN(big[n], h)
+            CMP_EQUAL_OR_RETURN(big[n], h);
             --n;
         }
         for (; m != MPD_SIZE_MAX; m--,n--) {
             _mpd_divmod_pow10(&h, &l, small[m], MPD_RDIGITS-r);
             x = ph * lprev + h;
-            CMP_EQUAL_OR_RETURN(big[n], x)
+            CMP_EQUAL_OR_RETURN(big[n], x);
             lprev = l;
         }
         x = ph * lprev;
-        CMP_EQUAL_OR_RETURN(big[q], x)
+        CMP_EQUAL_OR_RETURN(big[q], x);
     }
     else {
         while (--m != MPD_SIZE_MAX) {
-            CMP_EQUAL_OR_RETURN(big[m+q], small[m])
+            CMP_EQUAL_OR_RETURN(big[m+q], small[m]);
         }
     }
 
@@ -2220,7 +2220,7 @@ _mpd_cmp_same_adjexp(const mpd_t *a, const mpd_t *b)
      * so a->digits == b->digits, therefore a->len == b->len.
      */
     for (i = a->len-1; i >= 0; --i) {
-        CMP_EQUAL_OR_RETURN(a->data[i], b->data[i])
+        CMP_EQUAL_OR_RETURN(a->data[i], b->data[i]);
     }
 
     return 0;
@@ -4651,28 +4651,29 @@ ln_schedule_prec(mpd_ssize_t klist[MPD_MAX_PREC_LOG2], mpd_ssize_t maxprec,
   #error "mpdecimal.c: MPD_RDIGITS must be 19."
 #endif
 static const mpd_uint_t mpd_ln10_data[MPD_MINALLOC_MAX] = {
-  6983716328982174407ULL, 9089704281976336583ULL, 1515961135648465461ULL,
-  4416816335727555703ULL, 2900988039194170265ULL, 2307925037472986509ULL,
-   107598438319191292ULL, 3466624107184669231ULL, 4450099781311469159ULL,
-  9807828059751193854ULL, 7713456862091670584ULL, 1492198849978748873ULL,
-  6528728696511086257ULL, 2385392051446341972ULL, 8692180205189339507ULL,
-  6518769751037497088ULL, 2375253577097505395ULL, 9095610299291824318ULL,
-   982748238504564801ULL, 5438635917781170543ULL, 7547331541421808427ULL,
-   752371033310119785ULL, 3171643095059950878ULL, 9785265383207606726ULL,
-  2932258279850258550ULL, 5497347726624257094ULL, 2976979522110718264ULL,
-  9221477656763693866ULL, 1979650047149510504ULL, 6674183485704422507ULL,
-  9702766860595249671ULL, 9278096762712757753ULL, 9314848524948644871ULL,
-  6826928280848118428ULL,  754403708474699401ULL,  230105703089634572ULL,
-  1929203337658714166ULL, 7589402567763113569ULL, 4208241314695689016ULL,
-  2922455440575892572ULL, 9356734206705811364ULL, 2684916746550586856ULL,
-   644507064800027750ULL, 9476834636167921018ULL, 5659121373450747856ULL,
-  2835522011480466371ULL, 6470806855677432162ULL, 7141748003688084012ULL,
-  9619404400222105101ULL, 5504893431493939147ULL, 6674744042432743651ULL,
-  2287698219886746543ULL, 7773262884616336622ULL, 1985283935053089653ULL,
-  4680843799894826233ULL, 8168948290720832555ULL, 8067566662873690987ULL,
-  6248633409525465082ULL, 9829834196778404228ULL, 3524802359972050895ULL,
-  3327900967572609677ULL,  110148862877297603ULL,  179914546843642076ULL,
-  2302585092994045684ULL
+    // C2NIM
+  // 6983716328982174407ULL, 9089704281976336583ULL, 1515961135648465461ULL,
+  // 4416816335727555703ULL, 2900988039194170265ULL, 2307925037472986509ULL,
+  //  107598438319191292ULL, 3466624107184669231ULL, 4450099781311469159ULL,
+  // 9807828059751193854ULL, 7713456862091670584ULL, 1492198849978748873ULL,
+  // 6528728696511086257ULL, 2385392051446341972ULL, 8692180205189339507ULL,
+  // 6518769751037497088ULL, 2375253577097505395ULL, 9095610299291824318ULL,
+  //  982748238504564801ULL, 5438635917781170543ULL, 7547331541421808427ULL,
+  //  752371033310119785ULL, 3171643095059950878ULL, 9785265383207606726ULL,
+  // 2932258279850258550ULL, 5497347726624257094ULL, 2976979522110718264ULL,
+  // 9221477656763693866ULL, 1979650047149510504ULL, 6674183485704422507ULL,
+  // 9702766860595249671ULL, 9278096762712757753ULL, 9314848524948644871ULL,
+  // 6826928280848118428ULL,  754403708474699401ULL,  230105703089634572ULL,
+  // 1929203337658714166ULL, 7589402567763113569ULL, 4208241314695689016ULL,
+  // 2922455440575892572ULL, 9356734206705811364ULL, 2684916746550586856ULL,
+  //  644507064800027750ULL, 9476834636167921018ULL, 5659121373450747856ULL,
+  // 2835522011480466371ULL, 6470806855677432162ULL, 7141748003688084012ULL,
+  // 9619404400222105101ULL, 5504893431493939147ULL, 6674744042432743651ULL,
+  // 2287698219886746543ULL, 7773262884616336622ULL, 1985283935053089653ULL,
+  // 4680843799894826233ULL, 8168948290720832555ULL, 8067566662873690987ULL,
+  // 6248633409525465082ULL, 9829834196778404228ULL, 3524802359972050895ULL,
+  // 3327900967572609677ULL,  110148862877297603ULL,  179914546843642076ULL,
+  // 2302585092994045684ULL
 };
 #else
 #if MPD_RDIGITS != 9
@@ -5603,15 +5604,17 @@ static inline unsigned short
 _mpd_get_control87(void)
 {
     unsigned short cw;
+    // C2NIM
 
-    __asm__ __volatile__ ("fnstcw %0" : "=m" (cw));
+    // __asm__ __volatile__ ("fnstcw %0" : "=m" (cw));
     return cw;
 }
 
 static inline void
 _mpd_set_control87(unsigned short cw)
 {
-    __asm__ __volatile__ ("fldcw %0" : : "m" (cw));
+    // C2NIM
+    // __asm__ __volatile__ ("fldcw %0" : : "m" (cw));
 }
 #endif
 
@@ -8775,15 +8778,16 @@ int
 mpd_from_uint128_triple(mpd_t *result, const mpd_uint128_triple_t *triple, uint32_t *status)
 {
     static const mpd_context_t maxcontext = {
-     .prec=MPD_MAX_PREC,
-     .emax=MPD_MAX_EMAX,
-     .emin=MPD_MIN_EMIN,
-     .round=MPD_ROUND_HALF_EVEN,
-     .traps=MPD_Traps,
-     .status=0,
-     .newtrap=0,
-     .clamp=0,
-     .allcr=1,
+        // C2NIM
+     // .prec=MPD_MAX_PREC,
+     // .emax=MPD_MAX_EMAX,
+     // .emin=MPD_MIN_EMIN,
+     // .round=MPD_ROUND_HALF_EVEN,
+     // .traps=MPD_Traps,
+     // .status=0,
+     // .newtrap=0,
+     // .clamp=0,
+     // .allcr=1,
     };
     const enum mpd_triple_class tag = triple->tag;
     const uint8_t sign = triple->sign;

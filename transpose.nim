@@ -25,12 +25,26 @@
 ##  SUCH DAMAGE.
 ##
 
-# import
-#   mpdecimal
+import
+  mpdecimal
 
 ##  Internal header file: all symbols have local scope in the DSO
 ##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
-proc crt3*(x1: ptr MpdUintT; x2: ptr MpdUintT; x3: ptr MpdUintT; rsize: MpdSizeT) {.
-    importc: "crt3", header: "crt.h".}
+const
+  FORWARD_CYCLE* = 0
+  BACKWARD_CYCLE* = 1
+
+proc stdTrans*(dest: ptr MpdUintT; src: ptr MpdUintT; rows: MpdSizeT; cols: MpdSizeT) {.
+    importc: "std_trans", header: "transpose.h".}
+proc transposePow2*(matrix: ptr MpdUintT; rows: MpdSizeT; cols: MpdSizeT): cint {.
+    importc: "transpose_pow2", header: "transpose.h".}
+proc transpose3xpow2*(matrix: ptr MpdUintT; rows: MpdSizeT; cols: MpdSizeT) {.
+    importc: "transpose_3xpow2", header: "transpose.h".}
+proc pointerswap*(a: ptr ptr MpdUintT; b: ptr ptr MpdUintT) {.inline.} =
+  var tmp: ptr MpdUintT
+  tmp = b[]
+  b[] = a[]
+  a[] = tmp
+
 ##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */

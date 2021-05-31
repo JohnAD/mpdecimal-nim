@@ -35,7 +35,7 @@
 
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+MPD_PRAGMA(MPD_HIDE_SYMBOLS_START);
 
 
 mpd_uint_t _mpd_baseadd(mpd_uint_t *w, const mpd_uint_t *u, const mpd_uint_t *v,
@@ -212,7 +212,7 @@ _mpd_isallnine(const mpd_uint_t *data, mpd_ssize_t len)
 }
 
 
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
+MPD_PRAGMA(MPD_HIDE_SYMBOLS_END); /* restore previous scope rules */
 
 
 #endif /* LIBMPDEC_BASEARITH_H_ */

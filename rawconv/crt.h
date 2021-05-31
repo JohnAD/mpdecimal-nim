@@ -26,22 +26,21 @@
  */
 
 
-#ifndef LIBMPDEC_DIFRADIX2_H_
-#define LIBMPDEC_DIFRADIX2_H_
+#ifndef LIBMPDEC_CRT_H_
+#define LIBMPDEC_CRT_H_
 
 
 #include "mpdecimal.h"
-#include "numbertheory.h"
 
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
 
-void fnt_dif2(mpd_uint_t a[], mpd_size_t n, struct fnt_params *tparams);
+void crt3(mpd_uint_t *x1, mpd_uint_t *x2, mpd_uint_t *x3, mpd_size_t rsize);
 
 
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
 
 
-#endif /* LIBMPDEC_DIFRADIX2_H_ */
+#endif /* LIBMPDEC_CRT_H_ */

@@ -26,22 +26,22 @@
  */
 
 
-#ifndef LIBMPDEC_FNT_H_
-#define LIBMPDEC_FNT_H_
+#ifndef LIBMPDEC_SIXSTEP_H_
+#define LIBMPDEC_SIXSTEP_H_
 
 
 #include "mpdecimal.h"
 
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
 
-int std_fnt(mpd_uint_t a[], mpd_size_t n, int modnum);
-int std_inv_fnt(mpd_uint_t a[], mpd_size_t n, int modnum);
+int six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum);
+int inv_six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum);
 
 
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
 
 
-#endif /* LIBMPDEC_FNT_H_ */
+#endif /* LIBMPDEC_SIXSTEP_H_ */

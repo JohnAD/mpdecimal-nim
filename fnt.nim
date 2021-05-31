@@ -26,31 +26,13 @@
 ##
 
 import
-  mpdecimal, bits, difradix2, fnt, numbertheory
+  mpdecimal
 
-##  Bignum: Fast transform for medium-sized coefficients.
-##  forward transform, sign = -1
+##  Internal header file: all symbols have local scope in the DSO
+##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
-proc stdFnt*(a: ptr MpdUintT; n: MpdSizeT; modnum: cint): cint =
-  var tparams: ptr FntParams
-  assert(ispower2(n))
-  assert(n >= 4)
-  assert(n <= 3 * mpd_Maxtransform_2n)
-  if (tparams = mpdInitFntParams(n, -1, modnum)) == nil:
-    return 0
-  fntDif2(a, n, tparams)
-  mpdFree(tparams)
-  return 1
-
-##  reverse transform, sign = 1
-
-proc stdInvFnt*(a: ptr MpdUintT; n: MpdSizeT; modnum: cint): cint =
-  var tparams: ptr FntParams
-  assert(ispower2(n))
-  assert(n >= 4)
-  assert(n <= 3 * mpd_Maxtransform_2n)
-  if (tparams = mpdInitFntParams(n, 1, modnum)) == nil:
-    return 0
-  fntDif2(a, n, tparams)
-  mpdFree(tparams)
-  return 1
+proc stdFnt*(a: ptr MpdUintT; n: MpdSizeT; modnum: cint): cint {.importc: "std_fnt",
+    header: "fnt.h".}
+proc stdInvFnt*(a: ptr MpdUintT; n: MpdSizeT; modnum: cint): cint {.
+    importc: "std_inv_fnt", header: "fnt.h".}
+##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */

@@ -209,11 +209,12 @@ _mpd_mul_words(mpd_uint_t *hi, mpd_uint_t *lo, mpd_uint_t a, mpd_uint_t b)
 {
     mpd_uint_t h, l;
 
-    __asm__ ( "mulq %3\n\t"
-              : "=d" (h), "=a" (l)
-              : "%a" (a), "rm" (b)
-              : "cc"
-    );
+    // C2NIM
+    // __asm__ ( "mulq %3\n\t"
+    //           : "=d" (h), "=a" (l)
+    //           : "%a" (a), "rm" (b)
+    //           : "cc"
+    // );
 
     *hi = h;
     *lo = l;
@@ -225,11 +226,12 @@ _mpd_div_words(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo,
 {
     mpd_uint_t qq, rr;
 
-    __asm__ ( "divq %4\n\t"
-              : "=a" (qq), "=d" (rr)
-              : "a" (lo), "d" (hi), "rm" (d)
-              : "cc"
-    );
+    // C2NIM
+    // __asm__ ( "divq %4\n\t"
+    //           : "=a" (qq), "=d" (rr)
+    //           : "a" (lo), "d" (hi), "rm" (d)
+    //           : "cc"
+    // );
 
     *q = qq;
     *r = rr;
@@ -253,6 +255,7 @@ void _mpd_div_words(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo,
   #error "need platform specific 128 bit multiplication and division"
 #endif
 
+#pp DIVMOD
 #define DIVMOD(q, r, v, d) *q = v / d; *r = v - *q * d
 static inline void
 _mpd_divmod_pow10(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t v, mpd_uint_t exp)
@@ -295,7 +298,8 @@ _mpd_divmod_pow10(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t v, mpd_uint_t exp)
             case 16: DIVMOD(q, r, v, 10000000000000000ULL); break;
             case 17: DIVMOD(q, r, v, 100000000000000000ULL); break;
             case 18: DIVMOD(q, r, v, 1000000000000000000ULL); break;
-            case 19: DIVMOD(q, r, v, 10000000000000000000ULL); break; /* GCOV_NOT_REACHED */
+            // C2NIM
+            // case 19: DIVMOD(q, r, v, 10000000000000000000ULL); break; /* GCOV_NOT_REACHED */
             }
         }
     }
@@ -466,11 +470,12 @@ _mpd_mul_words(mpd_uint_t *hi, mpd_uint_t *lo, mpd_uint_t a, mpd_uint_t b)
 {
     mpd_uint_t h, l;
 
-    __asm__ ( "mull %3\n\t"
-              : "=d" (h), "=a" (l)
-              : "%a" (a), "rm" (b)
-              : "cc"
-    );
+    // C2NIM
+    // __asm__ ( "mull %3\n\t"
+    //           : "=d" (h), "=a" (l)
+    //           : "%a" (a), "rm" (b)
+    //           : "cc"
+    // );
 
     *hi = h;
     *lo = l;
@@ -482,11 +487,12 @@ _mpd_div_words(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo,
 {
     mpd_uint_t qq, rr;
 
-    __asm__ ( "divl %4\n\t"
-              : "=a" (qq), "=d" (rr)
-              : "a" (lo), "d" (hi), "rm" (d)
-              : "cc"
-    );
+    // C2NIM
+    // __asm__ ( "divl %4\n\t"
+    //           : "=a" (qq), "=d" (rr)
+    //           : "a" (lo), "d" (hi), "rm" (d)
+    //           : "cc"
+    // );
 
     *q = qq;
     *r = rr;
@@ -498,12 +504,13 @@ _mpd_mul_words(mpd_uint_t *hi, mpd_uint_t *lo, mpd_uint_t a, mpd_uint_t b)
 {
     mpd_uint_t h, l;
 
-    __asm {
-        mov eax, a
-        mul b
-        mov h, edx
-        mov l, eax
-    }
+    // C2NIM
+    // __asm {
+    //     mov eax, a
+    //     mul b
+    //     mov h, edx
+    //     mov l, eax
+    // }
 
     *hi = h;
     *lo = l;
@@ -515,13 +522,15 @@ _mpd_div_words(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo,
 {
     mpd_uint_t qq, rr;
 
-    __asm {
-        mov eax, lo
-        mov edx, hi
-        div d
-        mov qq, eax
-        mov rr, edx
-    }
+    // C2NIM
+
+    // __asm {
+    //     mov eax, lo
+    //     mov edx, hi
+    //     div d
+    //     mov qq, eax
+    //     mov rr, edx
+    // }
 
     *q = qq;
     *r = rr;
@@ -531,7 +540,8 @@ _mpd_div_words(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo,
   #error "need platform specific 64 bit multiplication and division"
 #endif
 
-#define DIVMOD(q, r, v, d) *q = v / d; *r = v - *q * d
+// C2NIM
+// #define DIVMOD(q, r, v, d) *q = v / d; *r = v - *q * d
 static inline void
 _mpd_divmod_pow10(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t v, mpd_uint_t exp)
 {

@@ -25,82 +25,100 @@
 ##  SUCH DAMAGE.
 ##
 
-import
-  mpdecimal, basearith, constants
+# import
+#   mpdecimal
+
+##  Internal header file: all symbols have local scope in the DSO
+##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+##  choice of optimized functions
 
 when defined(config_64):
-  ##  number-theory.c
-  ##  #ifndef C2NIM
-  ##  const mpd_uint_t mpd_moduli[3] = {
-  ##    18446744069414584321ULL, 18446744056529682433ULL, 18446742974197923841ULL
-  ##  };
-  ##  #endif
-  var mpdRoots*: array[3, MpdUintT] = [7, 10, 19]
-  ##  crt.c
-  ##  #ifndef C2NIM
-  ##  const mpd_uint_t INV_P1_MOD_P2   = 18446744055098026669ULL;
-  ##  const mpd_uint_t INV_P1P2_MOD_P3 = 287064143708160ULL;
-  ##  const mpd_uint_t LH_P1P2 = 18446744052234715137ULL;     /* (P1*P2) % 2^64 */
-  ##  const mpd_uint_t UH_P1P2 = 18446744052234715141ULL;     /* (P1*P2) / 2^64 */
-  ##  #endif
-  ##  transpose.c
-  ##  #ifndef C2NIM
-  ##    const mpd_size_t mpd_bits[64] = {
-  ##      1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024,  2048, 4096, 8192, 16384,
-  ##      32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608,
-  ##      16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824,
-  ##      2147483648ULL, 4294967296ULL, 8589934592ULL, 17179869184ULL, 34359738368ULL,
-  ##      68719476736ULL, 137438953472ULL, 274877906944ULL, 549755813888ULL,
-  ##      1099511627776ULL, 2199023255552ULL, 4398046511104, 8796093022208ULL,
-  ##      17592186044416ULL, 35184372088832ULL, 70368744177664ULL, 140737488355328ULL,
-  ##      281474976710656ULL, 562949953421312ULL, 1125899906842624ULL,
-  ##      2251799813685248ULL, 4503599627370496ULL, 9007199254740992ULL,
-  ##      18014398509481984ULL, 36028797018963968ULL, 72057594037927936ULL,
-  ##      144115188075855872ULL, 288230376151711744ULL, 576460752303423488ULL,
-  ##      1152921504606846976ULL, 2305843009213693952ULL, 4611686018427387904ULL,
-  ##      9223372036854775808ULL
-  ##    };
-  ##    /* mpdecimal.c */
-  ##    const mpd_uint_t mpd_pow10[MPD_RDIGITS+1] = {
-  ##      1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000,
-  ##      10000000000ULL,100000000000ULL,1000000000000ULL,10000000000000ULL,
-  ##      100000000000000ULL,1000000000000000ULL,10000000000000000ULL,
-  ##      100000000000000000ULL,1000000000000000000ULL,10000000000000000000ULL
-  ##    };
-  ##    /* magic number for constant division by MPD_RADIX */
-  ##    const mpd_uint_t mprime_rdx = 15581492618384294730ULL;
-  ##  #endif
-elif defined(config_32):
-  ##  number-theory.c
-  var mpdModuli*: array[3, MpdUintT] = [2113929217, 2013265921, 1811939329]
-  var mpdRoots*: array[3, MpdUintT] = [5, 31, 13]
-  ##  PentiumPro modular multiplication: These constants have to be loaded as
-  ##  80 bit long doubles, which are not supported by certain compilers.
-  var mpdInvmoduli*: array[3, array[3, uint32T]] = [
-      [4293885170'i64, 2181570688'i64, 16352], [1698898177, 2290649223'i64, 16352], [
-      2716021846'i64, 2545165803'i64, 16352]] ##  ((long double) 1 / 1811939329UL)
-  var MPD_TWO63*: cfloat = 9.223372036854776e+18
-  ##  2^63
-  ##  crt.c
-  var INV_P1_MOD_P2*: MpdUintT = 2013265901
-  var INV_P1P2_MOD_P3*: MpdUintT = 54
-  var LH_P1P2*: MpdUintT = 4127195137'i64
-  ##  (P1*P2) % 2^32
-  var UH_P1P2*: MpdUintT = 990904320
-  ##  (P1*P2) / 2^32
-  ##  transpose.c
-  var mpdBits*: array[32, MpdSizeT] = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,
-                                  8192, 16384, 32768, 65536, 131072, 262144, 524288,
-                                  1048576, 2097152, 4194304, 8388608, 16777216,
-                                  33554432, 67108864, 134217728, 268435456,
-                                  536870912, 1073741824, 2147483648'i64]
-  ##  mpdecimal.c
-  var mpdPow10*: array[mpd_Rdigits + 1, MpdUintT] = [1, 10, 100, 1000, 10000, 100000,
-      1000000, 10000000, 100000000, 1000000000]
-else:
-var mpdRoundString*: array[mpd_Round_Guard, cstring] = ["ROUND_UP", "ROUND_DOWN",
-    "ROUND_CEILING", "ROUND_FLOOR", "ROUND_HALF_UP", "ROUND_HALF_DOWN",
-    "ROUND_HALF_EVEN", "ROUND_05UP", "ROUND_TRUNC"]
+  ##  x64
+  template mulmod*(a, b: untyped): untyped =
+    x64Mulmod(a, b, umod)
 
-var mpdClampString*: array[mpd_Clamp_Guard, cstring] = ["CLAMP_DEFAULT",
-    "CLAMP_IEEE_754"]
+  template mulmod2c*(a0, a1, w: untyped): untyped =
+    x64Mulmod2c(a0, a1, w, umod)
+
+  template mulmod2*(a0, b0, a1, b1: untyped): untyped =
+    x64Mulmod2(a0, b0, a1, b1, umod)
+
+  template powmod*(base, exp: untyped): untyped =
+    x64Powmod(base, exp, umod)
+
+  template setmodulus*(modnum: untyped): untyped =
+    stdSetmodulus(modnum, addr(umod))
+
+  template size3Ntt*(x0, x1, x2, w3table: untyped): untyped =
+    stdSize3Ntt(x0, x1, x2, w3table, umod)
+
+elif defined(ppro):
+  ##  PentiumPro (or later) gcc inline asm
+  template mulmod*(a, b: untyped): untyped =
+    pproMulmod(a, b, addr(dmod), dinvmod)
+
+  template mulmod2c*(a0, a1, w: untyped): untyped =
+    pproMulmod2c(a0, a1, w, addr(dmod), dinvmod)
+
+  template mulmod2*(a0, b0, a1, b1: untyped): untyped =
+    pproMulmod2(a0, b0, a1, b1, addr(dmod), dinvmod)
+
+  template powmod*(base, exp: untyped): untyped =
+    pproPowmod(base, exp, addr(dmod), dinvmod)
+
+  template setmodulus*(modnum: untyped): untyped =
+    pproSetmodulus(modnum, addr(umod), addr(dmod), dinvmod)
+
+  template size3Ntt*(x0, x1, x2, w3table: untyped): untyped =
+    pproSize3Ntt(x0, x1, x2, w3table, umod, addr(dmod), dinvmod)
+
+else:
+  ##  ANSI C99
+  template mulmod*(a, b: untyped): untyped =
+    stdMulmod(a, b, umod)
+
+  template mulmod2c*(a0, a1, w: untyped): untyped =
+    stdMulmod2c(a0, a1, w, umod)
+
+  template mulmod2*(a0, b0, a1, b1: untyped): untyped =
+    stdMulmod2(a0, b0, a1, b1, umod)
+
+  template powmod*(base, exp: untyped): untyped =
+    stdPowmod(base, exp, umod)
+
+  template setmodulus*(modnum: untyped): untyped =
+    stdSetmodulus(modnum, addr(umod))
+
+  template size3Ntt*(x0, x1, x2, w3table: untyped): untyped =
+    stdSize3Ntt(x0, x1, x2, w3table, umod)
+
+##  PentiumPro (or later) gcc inline asm
+
+var MPD_TWO63* {.importc: "MPD_TWO63", header: "constants.h".}: cfloat
+
+var mpdInvmoduli* {.importc: "mpd_invmoduli", header: "constants.h".}: array[3,
+    array[3, uint32T]]
+
+const
+  P1* = 0
+  P2* = 1
+  P3* = 2
+
+var mpdModuli* {.importc: "mpd_moduli", header: "constants.h".}: UncheckedArray[
+    MpdUintT]
+
+var mpdRoots* {.importc: "mpd_roots", header: "constants.h".}: UncheckedArray[MpdUintT]
+
+var mpdBits* {.importc: "mpd_bits", header: "constants.h".}: UncheckedArray[MpdSizeT]
+
+var mpdPow10* {.importc: "mpd_pow10", header: "constants.h".}: UncheckedArray[MpdUintT]
+
+var INV_P1_MOD_P2* {.importc: "INV_P1_MOD_P2", header: "constants.h".}: MpdUintT
+
+var INV_P1P2_MOD_P3* {.importc: "INV_P1P2_MOD_P3", header: "constants.h".}: MpdUintT
+
+var LH_P1P2* {.importc: "LH_P1P2", header: "constants.h".}: MpdUintT
+
+var UH_P1P2* {.importc: "UH_P1P2", header: "constants.h".}: MpdUintT
+
+##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */

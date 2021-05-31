@@ -25,8 +25,8 @@
 ##  SUCH DAMAGE.
 ##
 
-import
-  mpdecimal
+# import
+#   mpdecimal
 
 proc mpdDfltTraphandler*(ctx: ptr MpdContextT) =
   cast[nil](ctx)

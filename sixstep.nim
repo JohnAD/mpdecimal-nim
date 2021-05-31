@@ -25,12 +25,14 @@
 ##  SUCH DAMAGE.
 ##
 
-# import
-#   mpdecimal
+import
+  mpdecimal
 
 ##  Internal header file: all symbols have local scope in the DSO
 ##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
-proc crt3*(x1: ptr MpdUintT; x2: ptr MpdUintT; x3: ptr MpdUintT; rsize: MpdSizeT) {.
-    importc: "crt3", header: "crt.h".}
+proc sixStepFnt*(a: ptr MpdUintT; n: MpdSizeT; modnum: cint): cint {.
+    importc: "six_step_fnt", header: "sixstep.h".}
+proc invSixStepFnt*(a: ptr MpdUintT; n: MpdSizeT; modnum: cint): cint {.
+    importc: "inv_six_step_fnt", header: "sixstep.h".}
 ##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */

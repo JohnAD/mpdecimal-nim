@@ -25,12 +25,37 @@
 ##  SUCH DAMAGE.
 ##
 
-# import
-#   mpdecimal
+import
+  mpdecimal, constants
 
 ##  Internal header file: all symbols have local scope in the DSO
 ##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+##  transform parameters
 
-proc crt3*(x1: ptr MpdUintT; x2: ptr MpdUintT; x3: ptr MpdUintT; rsize: MpdSizeT) {.
-    importc: "crt3", header: "crt.h".}
+type
+  FntParams* {.importc: "fnt_params", header: "numbertheory.h", bycopy.} = object
+    modnum* {.importc: "modnum".}: cint
+    modulus* {.importc: "modulus".}: MpdUintT
+    kernel* {.importc: "kernel".}: MpdUintT
+    wtable* {.importc: "wtable".}: UncheckedArray[MpdUintT]
+
+
+proc mpdGetkernel*(n: MpdUintT; sign: cint; modnum: cint): MpdUintT {.
+    importc: "_mpd_getkernel", header: "numbertheory.h".}
+proc mpdInitFntParams*(n: MpdSizeT; sign: cint; modnum: cint): ptr FntParams {.
+    importc: "_mpd_init_fnt_params", header: "numbertheory.h".}
+proc mpdInitW3table*(w3table: array[3, MpdUintT]; sign: cint; modnum: cint) {.
+    importc: "_mpd_init_w3table", header: "numbertheory.h".}
+when defined(PPRO):
+  proc pproSetmodulus*(modnum: cint; umod: ptr MpdUintT; dmod: ptr cdouble;
+                      dinvmod: array[3, uint32T]) {.inline.} =
+    dmod[] = umod[] = mpdModuli[modnum]
+    dinvmod[0] = mpdInvmoduli[modnum][0]
+    dinvmod[1] = mpdInvmoduli[modnum][1]
+    dinvmod[2] = mpdInvmoduli[modnum][2]
+
+else:
+  proc stdSetmodulus*(modnum: cint; umod: ptr MpdUintT) {.inline.} =
+    umod[] = mpdModuli[modnum]
+
 ##  MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */

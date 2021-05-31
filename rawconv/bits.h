@@ -78,22 +78,23 @@ mpd_bsf(mpd_size_t n)
 {
     int pos;
 
-#ifdef CONFIG_64
-    pos = 63;
-    if (n & 0x00000000FFFFFFFFULL) { pos -= 32; } else { n >>= 32; }
-    if (n & 0x000000000000FFFFULL) { pos -= 16; } else { n >>= 16; }
-    if (n & 0x00000000000000FFULL) { pos -=  8; } else { n >>=  8; }
-    if (n & 0x000000000000000FULL) { pos -=  4; } else { n >>=  4; }
-    if (n & 0x0000000000000003ULL) { pos -=  2; } else { n >>=  2; }
-    if (n & 0x0000000000000001ULL) { pos -=  1; }
-#else
+// C2NIM
+// #ifdef CONFIG_64
+//     pos = 63;
+//     if (n & 0x00000000FFFFFFFFULL) { pos -= 32; } else { n >>= 32; }
+//     if (n & 0x000000000000FFFFULL) { pos -= 16; } else { n >>= 16; }
+//     if (n & 0x00000000000000FFULL) { pos -=  8; } else { n >>=  8; }
+//     if (n & 0x000000000000000FULL) { pos -=  4; } else { n >>=  4; }
+//     if (n & 0x0000000000000003ULL) { pos -=  2; } else { n >>=  2; }
+//     if (n & 0x0000000000000001ULL) { pos -=  1; }
+// #else
     pos = 31;
     if (n & 0x000000000000FFFFUL) { pos -= 16; } else { n >>= 16; }
     if (n & 0x00000000000000FFUL) { pos -=  8; } else { n >>=  8; }
     if (n & 0x000000000000000FUL) { pos -=  4; } else { n >>=  4; }
     if (n & 0x0000000000000003UL) { pos -=  2; } else { n >>=  2; }
     if (n & 0x0000000000000001UL) { pos -=  1; }
-#endif
+// #endif
     return pos;
 }
 /* END ANSI */
@@ -107,16 +108,17 @@ mpd_bsr(mpd_size_t a)
 {
     mpd_size_t retval;
 
-    __asm__ (
-#ifdef CONFIG_64
-        "bsrq %1, %0\n\t"
-#else
-        "bsr %1, %0\n\t"
-#endif
-        :"=r" (retval)
-        :"r" (a)
-        :"cc"
-    );
+    // C2NIM
+//     __asm__ (
+// #ifdef CONFIG_64
+//         "bsrq %1, %0\n\t"
+// #else
+//         "bsr %1, %0\n\t"
+// #endif
+//         :"=r" (retval)
+//         :"r" (a)
+//         :"cc"
+//     );
 
     return (int)retval;
 }
@@ -129,16 +131,17 @@ mpd_bsf(mpd_size_t a)
 {
     mpd_size_t retval;
 
-    __asm__ (
-#ifdef CONFIG_64
-        "bsfq %1, %0\n\t"
-#else
-        "bsf %1, %0\n\t"
-#endif
-        :"=r" (retval)
-        :"r" (a)
-        :"cc"
-    );
+    // C2NIM
+//     __asm__ (
+// #ifdef CONFIG_64
+//         "bsfq %1, %0\n\t"
+// #else
+//         "bsf %1, %0\n\t"
+// #endif
+//         :"=r" (retval)
+//         :"r" (a)
+//         :"cc"
+//     );
 
     return (int)retval;
 }

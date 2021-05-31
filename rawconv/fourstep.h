@@ -26,36 +26,22 @@
  */
 
 
-#ifndef LIBMPDEC_TRANSPOSE_H_
-#define LIBMPDEC_TRANSPOSE_H_
+#ifndef LIBMPDEC_FOURSTEP_H_
+#define LIBMPDEC_FOURSTEP_H_
 
 
 #include "mpdecimal.h"
 
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
 
-enum {FORWARD_CYCLE, BACKWARD_CYCLE};
+int four_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum);
+int inv_four_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum);
 
 
-void std_trans(mpd_uint_t dest[], mpd_uint_t src[], mpd_size_t rows, mpd_size_t cols);
-int transpose_pow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols);
-void transpose_3xpow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols);
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
 
 
-static inline void pointerswap(mpd_uint_t **a, mpd_uint_t **b)
-{
-    mpd_uint_t *tmp;
-
-    tmp = *b;
-    *b = *a;
-    *a = tmp;
-}
-
-
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
-
-
-#endif /* LIBMPDEC_TRANSPOSE_H_ */
+#endif /* LIBMPDEC_FOURSTEP_H_ */

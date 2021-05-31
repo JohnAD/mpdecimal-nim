@@ -36,7 +36,7 @@
 
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
 
 /* choice of optimized functions */
@@ -83,7 +83,7 @@ extern const mpd_uint_t LH_P1P2;
 extern const mpd_uint_t UH_P1P2;
 
 
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
 
 
 #endif /* LIBMPDEC_CONSTANTS_H_ */

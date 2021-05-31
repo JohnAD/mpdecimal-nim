@@ -26,51 +26,36 @@
  */
 
 
-#ifndef LIBMPDEC_NUMBERTHEORY_H_
-#define LIBMPDEC_NUMBERTHEORY_H_
+#ifndef LIBMPDEC_TRANSPOSE_H_
+#define LIBMPDEC_TRANSPOSE_H_
 
 
 #include "mpdecimal.h"
-#include "constants.h"
 
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
 
-/* transform parameters */
-struct fnt_params {
-    int modnum;
-    mpd_uint_t modulus;
-    mpd_uint_t kernel;
-    mpd_uint_t wtable[];
-};
+enum {FORWARD_CYCLE, BACKWARD_CYCLE};
 
 
-mpd_uint_t _mpd_getkernel(mpd_uint_t n, int sign, int modnum);
-struct fnt_params *_mpd_init_fnt_params(mpd_size_t n, int sign, int modnum);
-void _mpd_init_w3table(mpd_uint_t w3table[3], int sign, int modnum);
+void std_trans(mpd_uint_t dest[], mpd_uint_t src[], mpd_size_t rows, mpd_size_t cols);
+int transpose_pow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols);
+void transpose_3xpow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols);
 
 
-#ifdef PPRO
-static inline void
-ppro_setmodulus(int modnum, mpd_uint_t *umod, double *dmod, uint32_t dinvmod[3])
+static inline void pointerswap(mpd_uint_t **a, mpd_uint_t **b)
 {
-    *dmod = *umod =  mpd_moduli[modnum];
-    dinvmod[0] = mpd_invmoduli[modnum][0];
-    dinvmod[1] = mpd_invmoduli[modnum][1];
-    dinvmod[2] = mpd_invmoduli[modnum][2];
+    mpd_uint_t *tmp;
+
+    tmp = *b;
+    *b = *a;
+    *a = tmp;
 }
-#else
-static inline void
-std_setmodulus(int modnum, mpd_uint_t *umod)
-{
-    *umod =  mpd_moduli[modnum];
-}
-#endif
 
 
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
 
 
-#endif /* LIBMPDEC_NUMBERTHEORY_H_ */
+#endif /* LIBMPDEC_TRANSPOSE_H_ */

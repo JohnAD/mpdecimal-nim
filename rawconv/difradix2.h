@@ -26,22 +26,22 @@
  */
 
 
-#ifndef LIBMPDEC_SIXSTEP_H_
-#define LIBMPDEC_SIXSTEP_H_
+#ifndef LIBMPDEC_DIFRADIX2_H_
+#define LIBMPDEC_DIFRADIX2_H_
 
 
 #include "mpdecimal.h"
+#include "numbertheory.h"
 
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
 
-int six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum);
-int inv_six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum);
+void fnt_dif2(mpd_uint_t a[], mpd_size_t n, struct fnt_params *tparams);
 
 
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
+// MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
 
 
-#endif /* LIBMPDEC_SIXSTEP_H_ */
+#endif /* LIBMPDEC_DIFRADIX2_H_ */
