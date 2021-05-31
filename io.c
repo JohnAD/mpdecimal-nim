@@ -344,24 +344,25 @@ mpd_qset_string_exact(mpd_t *dec, const char *s, uint32_t *status)
 
 /* Print word x with n decimal digits to string s. dot is either NULL
    or the location of a decimal point. */
+#pp EXTRACT_DIGIT
 #define EXTRACT_DIGIT(s, x, d, dot) \
         if (s == dot) *s++ = '.'; *s++ = '0' + (char)(x / d); x %= d
-static inline char *
-word_to_string(char *s, mpd_uint_t x, int n, char *dot)
+
+static inline char * word_to_string(char *s, mpd_uint_t x, int n, char *dot) 
 {
     switch(n) {
-#ifdef CONFIG_64
-    case 20: EXTRACT_DIGIT(s, x, 10000000000000000000ULL, dot); /* GCOV_NOT_REACHED */
-    case 19: EXTRACT_DIGIT(s, x, 1000000000000000000ULL, dot);
-    case 18: EXTRACT_DIGIT(s, x, 100000000000000000ULL, dot);
-    case 17: EXTRACT_DIGIT(s, x, 10000000000000000ULL, dot);
-    case 16: EXTRACT_DIGIT(s, x, 1000000000000000ULL, dot);
-    case 15: EXTRACT_DIGIT(s, x, 100000000000000ULL, dot);
-    case 14: EXTRACT_DIGIT(s, x, 10000000000000ULL, dot);
-    case 13: EXTRACT_DIGIT(s, x, 1000000000000ULL, dot);
-    case 12: EXTRACT_DIGIT(s, x, 100000000000ULL, dot);
-    case 11: EXTRACT_DIGIT(s, x, 10000000000ULL, dot);
-#endif
+// #ifdef CONFIG_64
+//     case 20: EXTRACT_DIGIT(s, x, 10000000000000000000ULL, dot); /* GCOV_NOT_REACHED */
+//     case 19: EXTRACT_DIGIT(s, x, 1000000000000000000ULL, dot);
+//     case 18: EXTRACT_DIGIT(s, x, 100000000000000000ULL, dot);
+//     case 17: EXTRACT_DIGIT(s, x, 10000000000000000ULL, dot);
+//     case 16: EXTRACT_DIGIT(s, x, 1000000000000000ULL, dot);
+//     case 15: EXTRACT_DIGIT(s, x, 100000000000000ULL, dot);
+//     case 14: EXTRACT_DIGIT(s, x, 10000000000000ULL, dot);
+//     case 13: EXTRACT_DIGIT(s, x, 1000000000000ULL, dot);
+//     case 12: EXTRACT_DIGIT(s, x, 100000000000ULL, dot);
+//     case 11: EXTRACT_DIGIT(s, x, 10000000000ULL, dot);
+// #endif
     case 10: EXTRACT_DIGIT(s, x, 1000000000UL, dot);
     case 9:  EXTRACT_DIGIT(s, x, 100000000UL, dot);
     case 8:  EXTRACT_DIGIT(s, x, 10000000UL, dot);
@@ -1229,7 +1230,7 @@ _mpd_round(mpd_t *result, const mpd_t *a, mpd_ssize_t prec,
         return; /* GCOV_NOT_REACHED */
     }
     if (mpd_isspecial(a) || mpd_iszero(a)) {
-        mpd_qcopy(result, a, status); /* GCOV_NOT_REACHED */
+        mpd_qcopy(result, a, status);  GCOV_NOT_REACHED 
         return; /* GCOV_NOT_REACHED */
     }
 
@@ -1582,17 +1583,19 @@ mpd_fprint(FILE *file, const mpd_t *dec)
     }
 }
 
-void
-mpd_print(const mpd_t *dec)
-{
-    char *decstring;
+// C2NIM crashed on the next function:
+//
+// void
+// mpd_print(const mpd_t *dec)
+// {
+//     char *decstring;
 
-    decstring = mpd_to_sci(dec, 1);
-    if (decstring != NULL) {
-        printf("%s\n", decstring);
-        mpd_free(decstring);
-    }
-    else {
-        fputs("mpd_fprint: output error\n", stderr); /* GCOV_NOT_REACHED */
-    }
-}
+//     decstring = mpd_to_sci(dec, 1);
+//     if (decstring != NULL) {
+//         printf("%s\n", decstring);
+//         mpd_free(decstring);
+//     }
+//     else {
+//         fputs("mpd_fprint: output error\n", stderr); /* GCOV_NOT_REACHED */
+//     }
+// }

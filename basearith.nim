@@ -26,7 +26,7 @@
 ##
 
 import
-  mpdecimal, constants, typearith
+  mpdecimal, basearith, constants, typearith
 
 ## *******************************************************************
 ##                    Calculations in base MPD_RADIX
@@ -38,23 +38,22 @@ import
 ##  The calling function has to handle a possible final carry.
 ##
 
-proc _mpd_baseadd*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; v: ptr mpd_uint_t; m: mpd_size_t;
-                  n: mpd_size_t): mpd_uint_t =
-  var s: mpd_uint_t
-  var carry: mpd_uint_t = 0
-  var i: mpd_size_t
+proc mpdBaseadd*(w: ptr MpdUintT; u: ptr MpdUintT; v: ptr MpdUintT; m: MpdSizeT; n: MpdSizeT): MpdUintT =
+  var s: MpdUintT
+  var carry: MpdUintT = 0
+  var i: MpdSizeT
   assert(n > 0 and m >= n)
   ##  add n members of u and v
   i = 0
   while i < n:
     s = u[i] + (v[i] + carry)
-    carry = (s < u[i]) or (s >= MPD_RADIX)
-    w[i] = if carry: s - MPD_RADIX else: s
+    carry = (s < u[i]) or (s >= mpd_Radix)
+    w[i] = if carry: s - mpd_Radix else: s
     inc(i)
   ##  if there is a carry, propagate it
   while carry and i < m:
     s = u[i] + carry
-    carry = (s == MPD_RADIX)
+    carry = (s == mpd_Radix)
     w[i] = if carry: 0 else: s
     inc(i)
   ##  copy the rest of u
@@ -68,22 +67,22 @@ proc _mpd_baseadd*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; v: ptr mpd_uint_t; m: m
 ##  has to make sure that w is big enough.
 ##
 
-proc _mpd_baseaddto*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t) =
-  var s: mpd_uint_t
-  var carry: mpd_uint_t = 0
-  var i: mpd_size_t
+proc mpdBaseaddto*(w: ptr MpdUintT; u: ptr MpdUintT; n: MpdSizeT) =
+  var s: MpdUintT
+  var carry: MpdUintT = 0
+  var i: MpdSizeT
   if n == 0:
     return
   i = 0
   while i < n:
     s = w[i] + (u[i] + carry)
-    carry = (s < w[i]) or (s >= MPD_RADIX)
-    w[i] = if carry: s - MPD_RADIX else: s
+    carry = (s < w[i]) or (s >= mpd_Radix)
+    w[i] = if carry: s - mpd_Radix else: s
     inc(i)
   ##  if there is a carry, propagate it
   while carry:
     s = w[i] + carry
-    carry = (s == MPD_RADIX)
+    carry = (s == mpd_Radix)
     w[i] = if carry: 0 else: s
     inc(i)
 
@@ -92,36 +91,36 @@ proc _mpd_baseaddto*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t) =
 ##  final carry. Assumption: m > 0.
 ##
 
-proc _mpd_shortadd*(w: ptr mpd_uint_t; m: mpd_size_t; v: mpd_uint_t): mpd_uint_t =
-  var s: mpd_uint_t
-  var carry: mpd_uint_t
-  var i: mpd_size_t
+proc mpdShortadd*(w: ptr MpdUintT; m: MpdSizeT; v: MpdUintT): MpdUintT =
+  var s: MpdUintT
+  var carry: MpdUintT
+  var i: MpdSizeT
   assert(m > 0)
   ##  add v to w
   s = w[0] + v
-  carry = (s < v) or (s >= MPD_RADIX)
-  w[0] = if carry: s - MPD_RADIX else: s
+  carry = (s < v) or (s >= mpd_Radix)
+  w[0] = if carry: s - mpd_Radix else: s
   ##  if there is a carry, propagate it
   i = 1
   while carry and i < m:
     s = w[i] + carry
-    carry = (s == MPD_RADIX)
+    carry = (s == mpd_Radix)
     w[i] = if carry: 0 else: s
     inc(i)
   return carry
 
 ##  Increment u. The calling function has to handle a possible carry.
 
-proc _mpd_baseincr*(u: ptr mpd_uint_t; n: mpd_size_t): mpd_uint_t =
-  var s: mpd_uint_t
-  var carry: mpd_uint_t = 1
-  var i: mpd_size_t
+proc mpdBaseincr*(u: ptr MpdUintT; n: MpdSizeT): MpdUintT =
+  var s: MpdUintT
+  var carry: MpdUintT = 1
+  var i: MpdSizeT
   assert(n > 0)
   ##  if there is a carry, propagate it
   i = 0
   while carry and i < n:
     s = u[i] + carry
-    carry = (s == MPD_RADIX)
+    carry = (s == mpd_Radix)
     u[i] = if carry: 0 else: s
     inc(i)
   return carry
@@ -132,24 +131,23 @@ proc _mpd_baseincr*(u: ptr mpd_uint_t; n: mpd_size_t): mpd_uint_t =
 ##      number in u >= number in v;
 ##
 
-proc _mpd_basesub*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; v: ptr mpd_uint_t; m: mpd_size_t;
-                  n: mpd_size_t) =
-  var d: mpd_uint_t
-  var borrow: mpd_uint_t = 0
-  var i: mpd_size_t
+proc mpdBasesub*(w: ptr MpdUintT; u: ptr MpdUintT; v: ptr MpdUintT; m: MpdSizeT; n: MpdSizeT) =
+  var d: MpdUintT
+  var borrow: MpdUintT = 0
+  var i: MpdSizeT
   assert(m > 0 and n > 0)
   ##  subtract n members of v from u
   i = 0
   while i < n:
     d = u[i] - (v[i] + borrow)
     borrow = (u[i] < d)
-    w[i] = if borrow: d + MPD_RADIX else: d
+    w[i] = if borrow: d + mpd_Radix else: d
     inc(i)
   ##  if there is a borrow, propagate it
   while borrow and i < m:
     d = u[i] - borrow
     borrow = (u[i] == 0)
-    w[i] = if borrow: MPD_RADIX - 1 else: d
+    w[i] = if borrow: mpd_Radix - 1 else: d
     inc(i)
   ##  copy the rest of u
   while i < m:
@@ -161,41 +159,41 @@ proc _mpd_basesub*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; v: ptr mpd_uint_t; m: m
 ##  propagated further, but eventually w can absorb the final borrow.
 ##
 
-proc _mpd_basesubfrom*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t) =
-  var d: mpd_uint_t
-  var borrow: mpd_uint_t = 0
-  var i: mpd_size_t
+proc mpdBasesubfrom*(w: ptr MpdUintT; u: ptr MpdUintT; n: MpdSizeT) =
+  var d: MpdUintT
+  var borrow: MpdUintT = 0
+  var i: MpdSizeT
   if n == 0:
     return
   i = 0
   while i < n:
     d = w[i] - (u[i] + borrow)
     borrow = (w[i] < d)
-    w[i] = if borrow: d + MPD_RADIX else: d
+    w[i] = if borrow: d + mpd_Radix else: d
     inc(i)
   ##  if there is a borrow, propagate it
   while borrow:
     d = w[i] - borrow
     borrow = (w[i] == 0)
-    w[i] = if borrow: MPD_RADIX - 1 else: d
+    w[i] = if borrow: mpd_Radix - 1 else: d
     inc(i)
 
 ##  w := product of u (len n) and v (single word)
 
-proc _mpd_shortmul*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t; v: mpd_uint_t) =
+proc mpdShortmul*(w: ptr MpdUintT; u: ptr MpdUintT; n: MpdSizeT; v: MpdUintT) =
   var
-    hi: mpd_uint_t
-    lo: mpd_uint_t
-  var carry: mpd_uint_t = 0
-  var i: mpd_size_t
+    hi: MpdUintT
+    lo: MpdUintT
+  var carry: MpdUintT = 0
+  var i: MpdSizeT
   assert(n > 0)
   i = 0
   while i < n:
-    _mpd_mul_words(addr(hi), addr(lo), u[i], v)
+    mpdMulWords(addr(hi), addr(lo), u[i], v)
     lo = carry + lo
     if lo < carry:
       inc(hi)
-    _mpd_div_words_r(addr(carry), addr(w[i]), hi, lo)
+    mpdDivWordsR(addr(carry), addr(w[i]), hi, lo)
     inc(i)
   w[i] = carry
 
@@ -205,29 +203,28 @@ proc _mpd_shortmul*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t; v: mpd_
 ##      w must be initialized to zero
 ##
 
-proc _mpd_basemul*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; v: ptr mpd_uint_t; m: mpd_size_t;
-                  n: mpd_size_t) =
+proc mpdBasemul*(w: ptr MpdUintT; u: ptr MpdUintT; v: ptr MpdUintT; m: MpdSizeT; n: MpdSizeT) =
   var
-    hi: mpd_uint_t
-    lo: mpd_uint_t
-  var carry: mpd_uint_t
+    hi: MpdUintT
+    lo: MpdUintT
+  var carry: MpdUintT
   var
-    i: mpd_size_t
-    j: mpd_size_t
+    i: MpdSizeT
+    j: MpdSizeT
   assert(m > 0 and n > 0)
   j = 0
   while j < n:
     carry = 0
     i = 0
     while i < m:
-      _mpd_mul_words(addr(hi), addr(lo), u[i], v[j])
+      mpdMulWords(addr(hi), addr(lo), u[i], v[j])
       lo = w[i + j] + lo
       if lo < w[i + j]:
         inc(hi)
       lo = carry + lo
       if lo < carry:
         inc(hi)
-      _mpd_div_words_r(addr(carry), addr(w[i + j]), hi, lo)
+      mpdDivWordsR(addr(carry), addr(w[i + j]), hi, lo)
       inc(i)
     w[j + m] = carry
     inc(j)
@@ -237,20 +234,20 @@ proc _mpd_basemul*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; v: ptr mpd_uint_t; m: m
 ##      w := quotient of u (len n) divided by a single word v
 ##
 
-proc _mpd_shortdiv*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t; v: mpd_uint_t): mpd_uint_t =
+proc mpdShortdiv*(w: ptr MpdUintT; u: ptr MpdUintT; n: MpdSizeT; v: MpdUintT): MpdUintT =
   var
-    hi: mpd_uint_t
-    lo: mpd_uint_t
-  var rem: mpd_uint_t = 0
-  var i: mpd_size_t
+    hi: MpdUintT
+    lo: MpdUintT
+  var rem: MpdUintT = 0
+  var i: MpdSizeT
   assert(n > 0)
   i = n - 1
-  while i != MPD_SIZE_MAX:
-    _mpd_mul_words(addr(hi), addr(lo), rem, MPD_RADIX)
+  while i != mpd_Size_Max:
+    mpdMulWords(addr(hi), addr(lo), rem, mpd_Radix)
     lo = u[i] + lo
     if lo < u[i]:
       inc(hi)
-    _mpd_div_words(addr(w[i]), addr(rem), hi, lo, v)
+    mpdDivWords(addr(w[i]), addr(rem), hi, lo, v)
     dec(i)
   return rem
 
@@ -265,70 +262,70 @@ proc _mpd_shortdiv*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t; v: mpd_
 ##  false.  A return value of -1 indicates an error.
 ##
 
-proc _mpd_basedivmod*(q: ptr mpd_uint_t; r: ptr mpd_uint_t; uconst: ptr mpd_uint_t;
-                     vconst: ptr mpd_uint_t; nplusm: mpd_size_t; n: mpd_size_t): cint =
-  var ustatic: array[MPD_MINALLOC_MAX, mpd_uint_t]
-  var vstatic: array[MPD_MINALLOC_MAX, mpd_uint_t]
-  var u: ptr mpd_uint_t = ustatic
-  var v: ptr mpd_uint_t = vstatic
+proc mpdBasedivmod*(q: ptr MpdUintT; r: ptr MpdUintT; uconst: ptr MpdUintT;
+                   vconst: ptr MpdUintT; nplusm: MpdSizeT; n: MpdSizeT): cint =
+  var ustatic: array[mpd_Minalloc_Max, MpdUintT]
+  var vstatic: array[mpd_Minalloc_Max, MpdUintT]
+  var u: ptr MpdUintT = ustatic
+  var v: ptr MpdUintT = vstatic
   var
-    d: mpd_uint_t
-    qhat: mpd_uint_t
-    rhat: mpd_uint_t
-    w2: array[2, mpd_uint_t]
+    d: MpdUintT
+    qhat: MpdUintT
+    rhat: MpdUintT
+    w2: array[2, MpdUintT]
   var
-    hi: mpd_uint_t
-    lo: mpd_uint_t
-    x: mpd_uint_t
-  var carry: mpd_uint_t
+    hi: MpdUintT
+    lo: MpdUintT
+    x: MpdUintT
+  var carry: MpdUintT
   var
-    i: mpd_size_t
-    j: mpd_size_t
-    m: mpd_size_t
+    i: MpdSizeT
+    j: MpdSizeT
+    m: MpdSizeT
   var retval: cint = 0
   assert(n > 1 and nplusm >= n)
-  m = sub_size_t(nplusm, n)
+  m = subSizeT(nplusm, n)
   ##  D1: normalize
-  d = MPD_RADIX div (vconst[n - 1] + 1)
-  if nplusm >= MPD_MINALLOC_MAX:
-    if (u = mpd_alloc(nplusm + 1, sizeof(u[]))) == nil:
+  d = mpd_Radix div (vconst[n - 1] + 1)
+  if nplusm >= mpd_Minalloc_Max:
+    if (u = mpdAlloc(nplusm + 1, sizeof(u[]))) == nil:
       return -1
-  if n >= MPD_MINALLOC_MAX:
-    if (v = mpd_alloc(n + 1, sizeof(v[]))) == nil:
-      mpd_free(u)
+  if n >= mpd_Minalloc_Max:
+    if (v = mpdAlloc(n + 1, sizeof(v[]))) == nil:
+      mpdFree(u)
       return -1
-  _mpd_shortmul(u, uconst, nplusm, d)
-  _mpd_shortmul(v, vconst, n, d)
+  mpdShortmul(u, uconst, nplusm, d)
+  mpdShortmul(v, vconst, n, d)
   ##  D2: loop
   j = m
-  while j != MPD_SIZE_MAX:
+  while j != mpd_Size_Max:
     assert(2 <= j + n and j + n <= nplusm)
     ##  annotation for scan-build
     ##  D3: calculate qhat and rhat
-    rhat = _mpd_shortdiv(w2, u + j + n - 1, 2, v[n - 1])
-    qhat = w2[1] * MPD_RADIX + w2[0]
+    rhat = mpdShortdiv(w2, u + j + n - 1, 2, v[n - 1])
+    qhat = w2[1] * mpd_Radix + w2[0]
     while 1:
-      if qhat < MPD_RADIX:
-        _mpd_singlemul(w2, qhat, v[n - 2])
+      if qhat < mpd_Radix:
+        mpdSinglemul(w2, qhat, v[n - 2])
         if w2[1] <= rhat:
           if w2[1] != rhat or w2[0] <= u[j + n - 2]:
             break
       dec(qhat, 1)
       inc(rhat, v[n - 1])
-      if rhat < v[n - 1] or rhat >= MPD_RADIX:
+      if rhat < v[n - 1] or rhat >= mpd_Radix:
         break
     ##  D4: multiply and subtract
     carry = 0
     i = 0
     while i <= n:
-      _mpd_mul_words(addr(hi), addr(lo), qhat, v[i])
+      mpdMulWords(addr(hi), addr(lo), qhat, v[i])
       lo = carry + lo
       if lo < carry:
         inc(hi)
-      _mpd_div_words_r(addr(hi), addr(lo), hi, lo)
+      mpdDivWordsR(addr(hi), addr(lo), hi, lo)
       x = u[i + j] - lo
       carry = (u[i + j] < x)
-      u[i + j] = if carry: x + MPD_RADIX else: x
+      u[i + j] = if carry: x + mpd_Radix else: x
       inc(carry, hi)
       inc(i)
     q[j] = qhat
@@ -336,19 +333,19 @@ proc _mpd_basedivmod*(q: ptr mpd_uint_t; r: ptr mpd_uint_t; uconst: ptr mpd_uint
     if carry:
       dec(q[j], 1)
       ##  D6: add back
-      cast[nil](_mpd_baseadd(u + j, u + j, v, n + 1, n))
+      cast[nil](mpdBaseadd(u + j, u + j, v, n + 1, n))
     dec(j)
   ##  D8: unnormalize
   if r != nil:
-    _mpd_shortdiv(r, u, n, d)
+    mpdShortdiv(r, u, n, d)
     ##  we are not interested in the return value here
     retval = 0
   else:
-    retval = not _mpd_isallzero(u, n)
+    retval = not mpdIsallzero(u, n)
   if u != ustatic:
-    mpd_free(u)
+    mpdFree(u)
   if v != vstatic:
-    mpd_free(v)
+    mpdFree(v)
   return retval
 
 ##
@@ -376,36 +373,35 @@ proc _mpd_basedivmod*(q: ptr mpd_uint_t; r: ptr mpd_uint_t; uconst: ptr mpd_uint
 ##   otherwise.
 ##
 
-proc _mpd_baseshiftl*(dest: ptr mpd_uint_t; src: ptr mpd_uint_t; n: mpd_size_t;
-                     m: mpd_size_t; shift: mpd_size_t) =
-  when defined(__GNUC__) and not defined(__INTEL_COMPILER) and
-      not defined(__clang__):
+proc mpdBaseshiftl*(dest: ptr MpdUintT; src: ptr MpdUintT; n: MpdSizeT; m: MpdSizeT;
+                   shift: MpdSizeT) =
+  when defined(gnuc) and not defined(intel_Compiler) and not defined(clang):
     ##  spurious uninitialized warnings
     var
-      l: mpd_uint_t = l
-      lprev: mpd_uint_t = lprev
-      h: mpd_uint_t = h
+      l: MpdUintT = l
+      lprev: MpdUintT = lprev
+      h: MpdUintT = h
   else:
     var
-      l: mpd_uint_t
-      lprev: mpd_uint_t
-      h: mpd_uint_t
+      l: MpdUintT
+      lprev: MpdUintT
+      h: MpdUintT
   var
-    q: mpd_uint_t
-    r: mpd_uint_t
-  var ph: mpd_uint_t
+    q: MpdUintT
+    r: MpdUintT
+  var ph: MpdUintT
   assert(m > 0 and n >= m)
-  _mpd_div_word(addr(q), addr(r), cast[mpd_uint_t](shift), MPD_RDIGITS)
+  mpdDivWord(addr(q), addr(r), cast[MpdUintT](shift), mpd_Rdigits)
   if r != 0:
-    ph = mpd_pow10[r]
+    ph = mpdPow10[r]
     dec(m)
     dec(n)
-    _mpd_divmod_pow10(addr(h), addr(lprev), src[dec(m)], MPD_RDIGITS - r)
+    mpdDivmodPow10(addr(h), addr(lprev), src[dec(m)], mpd_Rdigits - r)
     if h != 0:
       ##  r + msdigits > rdigits <==> h != 0
       dest[dec(n)] = h
-    while m != MPD_SIZE_MAX:
-      _mpd_divmod_pow10(addr(h), addr(l), src[m], MPD_RDIGITS - r)
+    while m != mpd_Size_Max:
+      mpdDivmodPow10(addr(h), addr(l), src[m], mpd_Rdigits - r)
       dest[n] = ph * lprev + h
       lprev = l
       dec(m)
@@ -413,9 +409,9 @@ proc _mpd_baseshiftl*(dest: ptr mpd_uint_t; src: ptr mpd_uint_t; n: mpd_size_t;
     ##  write least significant word
     dest[q] = ph * lprev
   else:
-    while dec(m) != MPD_SIZE_MAX:
+    while dec(m) != mpd_Size_Max:
       dest[m + q] = src[m]
-  mpd_uint_zero(dest, q)
+  mpdUintZero(dest, q)
 
 ##
 ##  Right shift of src by 'shift' digits; src may equal dest.
@@ -443,46 +439,45 @@ proc _mpd_baseshiftl*(dest: ptr mpd_uint_t; src: ptr mpd_uint_t; n: mpd_size_t;
 ##  The result has slen-q words if msdigits > r, slen-q-1 words otherwise.
 ##
 
-proc _mpd_baseshiftr*(dest: ptr mpd_uint_t; src: ptr mpd_uint_t; slen: mpd_size_t;
-                     shift: mpd_size_t): mpd_uint_t =
-  when defined(__GNUC__) and not defined(__INTEL_COMPILER) and
-      not defined(__clang__):
+proc mpdBaseshiftr*(dest: ptr MpdUintT; src: ptr MpdUintT; slen: MpdSizeT;
+                   shift: MpdSizeT): MpdUintT =
+  when defined(gnuc) and not defined(intel_Compiler) and not defined(clang):
     ##  spurious uninitialized warnings
     var
-      l: mpd_uint_t = l
-      h: mpd_uint_t = h
-      hprev: mpd_uint_t = hprev
+      l: MpdUintT = l
+      h: MpdUintT = h
+      hprev: MpdUintT = hprev
     ##  low, high, previous high
   else:
     var
-      l: mpd_uint_t
-      h: mpd_uint_t
-      hprev: mpd_uint_t
+      l: MpdUintT
+      h: MpdUintT
+      hprev: MpdUintT
     ##  low, high, previous high
   var
-    rnd: mpd_uint_t
-    rest: mpd_uint_t
+    rnd: MpdUintT
+    rest: MpdUintT
   ##  rounding digit, rest
   var
-    q: mpd_uint_t
-    r: mpd_uint_t
+    q: MpdUintT
+    r: MpdUintT
   var
-    i: mpd_size_t
-    j: mpd_size_t
-  var ph: mpd_uint_t
+    i: MpdSizeT
+    j: MpdSizeT
+  var ph: MpdUintT
   assert(slen > 0)
-  _mpd_div_word(addr(q), addr(r), cast[mpd_uint_t](shift), MPD_RDIGITS)
+  mpdDivWord(addr(q), addr(r), cast[MpdUintT](shift), mpd_Rdigits)
   rnd = rest = 0
   if r != 0:
-    ph = mpd_pow10[MPD_RDIGITS - r]
-    _mpd_divmod_pow10(addr(hprev), addr(rest), src[q], r)
-    _mpd_divmod_pow10(addr(rnd), addr(rest), rest, r - 1)
+    ph = mpdPow10[mpd_Rdigits - r]
+    mpdDivmodPow10(addr(hprev), addr(rest), src[q], r)
+    mpdDivmodPow10(addr(rnd), addr(rest), rest, r - 1)
     if rest == 0 and q > 0:
-      rest = not _mpd_isallzero(src, q)
+      rest = not mpdIsallzero(src, q)
     j = 0
     i = q + 1
     while i < slen:
-      _mpd_divmod_pow10(addr(h), addr(l), src[i], r)
+      mpdDivmodPow10(addr(h), addr(l), src[i], r)
       dest[j] = ph * l + hprev
       hprev = h
       inc(i)
@@ -493,10 +488,10 @@ proc _mpd_baseshiftr*(dest: ptr mpd_uint_t; src: ptr mpd_uint_t; slen: mpd_size_
       dest[j] = hprev
   else:
     if q > 0:
-      _mpd_divmod_pow10(addr(rnd), addr(rest), src[q - 1], MPD_RDIGITS - 1)
+      mpdDivmodPow10(addr(rnd), addr(rest), src[q - 1], mpd_Rdigits - 1)
       ##  is there any non-zero digit below rnd?
       if rest == 0:
-        rest = not _mpd_isallzero(src, q - 1)
+        rest = not mpdIsallzero(src, q - 1)
     j = 0
     while j < slen - q:
       dest[j] = src[q + j]
@@ -514,10 +509,10 @@ proc _mpd_baseshiftr*(dest: ptr mpd_uint_t; src: ptr mpd_uint_t; slen: mpd_size_
 ##  final carry. Assumption: m > 0.
 ##
 
-proc _mpd_shortadd_b*(w: ptr mpd_uint_t; m: mpd_size_t; v: mpd_uint_t; b: mpd_uint_t): mpd_uint_t =
-  var s: mpd_uint_t
-  var carry: mpd_uint_t
-  var i: mpd_size_t
+proc mpdShortaddB*(w: ptr MpdUintT; m: MpdSizeT; v: MpdUintT; b: MpdUintT): MpdUintT =
+  var s: MpdUintT
+  var carry: MpdUintT
+  var i: MpdSizeT
   assert(m > 0)
   ##  add v to w
   s = w[0] + v
@@ -534,40 +529,39 @@ proc _mpd_shortadd_b*(w: ptr mpd_uint_t; m: mpd_size_t; v: mpd_uint_t; b: mpd_ui
 
 ##  w := product of u (len n) and v (single word). Return carry.
 
-proc _mpd_shortmul_c*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t; v: mpd_uint_t): mpd_uint_t =
+proc mpdShortmulC*(w: ptr MpdUintT; u: ptr MpdUintT; n: MpdSizeT; v: MpdUintT): MpdUintT =
   var
-    hi: mpd_uint_t
-    lo: mpd_uint_t
-  var carry: mpd_uint_t = 0
-  var i: mpd_size_t
+    hi: MpdUintT
+    lo: MpdUintT
+  var carry: MpdUintT = 0
+  var i: MpdSizeT
   assert(n > 0)
   i = 0
   while i < n:
-    _mpd_mul_words(addr(hi), addr(lo), u[i], v)
+    mpdMulWords(addr(hi), addr(lo), u[i], v)
     lo = carry + lo
     if lo < carry:
       inc(hi)
-    _mpd_div_words_r(addr(carry), addr(w[i]), hi, lo)
+    mpdDivWordsR(addr(carry), addr(w[i]), hi, lo)
     inc(i)
   return carry
 
 ##  w := product of u (len n) and v (single word)
 
-proc _mpd_shortmul_b*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t; v: mpd_uint_t;
-                     b: mpd_uint_t): mpd_uint_t =
+proc mpdShortmulB*(w: ptr MpdUintT; u: ptr MpdUintT; n: MpdSizeT; v: MpdUintT; b: MpdUintT): MpdUintT =
   var
-    hi: mpd_uint_t
-    lo: mpd_uint_t
-  var carry: mpd_uint_t = 0
-  var i: mpd_size_t
+    hi: MpdUintT
+    lo: MpdUintT
+  var carry: MpdUintT = 0
+  var i: MpdSizeT
   assert(n > 0)
   i = 0
   while i < n:
-    _mpd_mul_words(addr(hi), addr(lo), u[i], v)
+    mpdMulWords(addr(hi), addr(lo), u[i], v)
     lo = carry + lo
     if lo < carry:
       inc(hi)
-    _mpd_div_words(addr(carry), addr(w[i]), hi, lo, b)
+    mpdDivWords(addr(carry), addr(w[i]), hi, lo, b)
     inc(i)
   return carry
 
@@ -576,20 +570,19 @@ proc _mpd_shortmul_b*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t; v: mp
 ##      w := quotient of u (len n) divided by a single word v
 ##
 
-proc _mpd_shortdiv_b*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; n: mpd_size_t; v: mpd_uint_t;
-                     b: mpd_uint_t): mpd_uint_t =
+proc mpdShortdivB*(w: ptr MpdUintT; u: ptr MpdUintT; n: MpdSizeT; v: MpdUintT; b: MpdUintT): MpdUintT =
   var
-    hi: mpd_uint_t
-    lo: mpd_uint_t
-  var rem: mpd_uint_t = 0
-  var i: mpd_size_t
+    hi: MpdUintT
+    lo: MpdUintT
+  var rem: MpdUintT = 0
+  var i: MpdSizeT
   assert(n > 0)
   i = n - 1
-  while i != MPD_SIZE_MAX:
-    _mpd_mul_words(addr(hi), addr(lo), rem, b)
+  while i != mpd_Size_Max:
+    mpdMulWords(addr(hi), addr(lo), rem, b)
     lo = u[i] + lo
     if lo < u[i]:
       inc(hi)
-    _mpd_div_words(addr(w[i]), addr(rem), hi, lo, v)
+    mpdDivWords(addr(w[i]), addr(rem), hi, lo, v)
     dec(i)
   return rem

@@ -36,10 +36,10 @@ import
 ##  Chapter 1.14.4. [http://www.jjj.de/fxt/]
 ##
 
-proc bitreverse_permute*(a: ptr mpd_uint_t; n: mpd_size_t) {.inline.} =
-  var x: mpd_size_t = 0
-  var r: mpd_size_t = 0
-  var t: mpd_uint_t
+proc bitreversePermute*(a: ptr MpdUintT; n: MpdSizeT) {.inline.} =
+  var x: MpdSizeT = 0
+  var r: MpdSizeT = 0
+  var t: MpdUintT
   while true:
     ##  Invariant: r = bitreverse(x)
     if r > x:
@@ -49,38 +49,38 @@ proc bitreverse_permute*(a: ptr mpd_uint_t; n: mpd_size_t) {.inline.} =
     inc(x, 1)
     ##  Mirror the operation on r: Flip n_trailing_zeros(x)+1
     ##            high bits of r.
-    r = r xor (n - (n shr (mpd_bsf(x) + 1)))
+    r = r xor (n - (n shr (mpdBsf(x) + 1)))
     ##  The loop invariant is preserved.
     if not (x < n):
       break
 
 ##  Fast Number Theoretic Transform, decimation in frequency.
 
-proc fnt_dif2*(a: ptr mpd_uint_t; n: mpd_size_t; tparams: ptr fnt_params) =
-  var wtable: ptr mpd_uint_t = tparams.wtable
-  var umod: mpd_uint_t
+proc fntDif2*(a: ptr MpdUintT; n: MpdSizeT; tparams: ptr FntParams) =
+  var wtable: ptr MpdUintT = tparams.wtable
+  var umod: MpdUintT
   when defined(PPRO):
     var dmod: cdouble
-    var dinvmod: array[3, uint32_t]
+    var dinvmod: array[3, uint32T]
   var
-    u0: mpd_uint_t
-    u1: mpd_uint_t
-    v0: mpd_uint_t
-    v1: mpd_uint_t
+    u0: MpdUintT
+    u1: MpdUintT
+    v0: MpdUintT
+    v1: MpdUintT
   var
-    w: mpd_uint_t
-    w0: mpd_uint_t
-    w1: mpd_uint_t
-    wstep: mpd_uint_t
+    w: MpdUintT
+    w0: MpdUintT
+    w1: MpdUintT
+    wstep: MpdUintT
   var
-    m: mpd_size_t
-    mhalf: mpd_size_t
+    m: MpdSizeT
+    mhalf: MpdSizeT
   var
-    j: mpd_size_t
-    r: mpd_size_t
+    j: MpdSizeT
+    r: MpdSizeT
   assert(ispower2(n))
   assert(n >= 4)
-  SETMODULUS(tparams.modnum)
+  setmodulus(tparams.modnum)
   ##  m == n
   mhalf = n div 2
   j = 0
@@ -95,7 +95,7 @@ proc fnt_dif2*(a: ptr mpd_uint_t; n: mpd_size_t; tparams: ptr fnt_params) =
     v0 = submod(u0, v0, umod)
     a[j + 1] = addmod(u1, v1, umod)
     v1 = submod(u1, v1, umod)
-    MULMOD2(addr(v0), w0, addr(v1), w1)
+    mulmod2(addr(v0), w0, addr(v1), w1)
     a[j + mhalf] = v0
     a[j + 1 + mhalf] = v1
     inc(j, 2)
@@ -130,11 +130,11 @@ proc fnt_dif2*(a: ptr mpd_uint_t; n: mpd_size_t; tparams: ptr fnt_params) =
         v0 = submod(u0, v0, umod)
         a[m + r + j] = addmod(u1, v1, umod)
         v1 = submod(u1, v1, umod)
-        MULMOD2C(addr(v0), addr(v1), w)
+        mulmod2c(addr(v0), addr(v1), w)
         a[r + j + mhalf] = v0
         a[m + r + j + mhalf] = v1
         inc(r, 2 * m)
       inc(j)
     m = m shr 1
     wstep = wstep shl 1
-  bitreverse_permute(a, n)
+  bitreversePermute(a, n)

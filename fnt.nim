@@ -31,26 +31,26 @@ import
 ##  Bignum: Fast transform for medium-sized coefficients.
 ##  forward transform, sign = -1
 
-proc std_fnt*(a: ptr mpd_uint_t; n: mpd_size_t; modnum: cint): cint =
-  var tparams: ptr fnt_params
+proc stdFnt*(a: ptr MpdUintT; n: MpdSizeT; modnum: cint): cint =
+  var tparams: ptr FntParams
   assert(ispower2(n))
   assert(n >= 4)
-  assert(n <= 3 * MPD_MAXTRANSFORM_2N)
-  if (tparams = _mpd_init_fnt_params(n, -1, modnum)) == nil:
+  assert(n <= 3 * mpd_Maxtransform_2n)
+  if (tparams = mpdInitFntParams(n, -1, modnum)) == nil:
     return 0
-  fnt_dif2(a, n, tparams)
-  mpd_free(tparams)
+  fntDif2(a, n, tparams)
+  mpdFree(tparams)
   return 1
 
 ##  reverse transform, sign = 1
 
-proc std_inv_fnt*(a: ptr mpd_uint_t; n: mpd_size_t; modnum: cint): cint =
-  var tparams: ptr fnt_params
+proc stdInvFnt*(a: ptr MpdUintT; n: MpdSizeT; modnum: cint): cint =
+  var tparams: ptr FntParams
   assert(ispower2(n))
   assert(n >= 4)
-  assert(n <= 3 * MPD_MAXTRANSFORM_2N)
-  if (tparams = _mpd_init_fnt_params(n, 1, modnum)) == nil:
+  assert(n <= 3 * mpd_Maxtransform_2n)
+  if (tparams = mpdInitFntParams(n, 1, modnum)) == nil:
     return 0
-  fnt_dif2(a, n, tparams)
-  mpd_free(tparams)
+  fntDif2(a, n, tparams)
+  mpdFree(tparams)
   return 1

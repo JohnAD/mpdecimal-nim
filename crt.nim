@@ -31,14 +31,14 @@ import
 ##  Bignum: Chinese Remainder Theorem, extends the maximum transform length.
 ##  Multiply P1P2 by v, store result in w.
 
-proc _crt_mulP1P2_3*(w: array[3, mpd_uint_t]; v: mpd_uint_t) {.inline.} =
+proc crtMulP1P23*(w: array[3, MpdUintT]; v: MpdUintT) {.inline.} =
   var
-    hi1: mpd_uint_t
-    hi2: mpd_uint_t
-    lo: mpd_uint_t
-  _mpd_mul_words(addr(hi1), addr(lo), LH_P1P2, v)
+    hi1: MpdUintT
+    hi2: MpdUintT
+    lo: MpdUintT
+  mpdMulWords(addr(hi1), addr(lo), lh_P1p2, v)
   w[0] = lo
-  _mpd_mul_words(addr(hi2), addr(lo), UH_P1P2, v)
+  mpdMulWords(addr(hi2), addr(lo), uh_P1p2, v)
   lo = hi1 + lo
   if lo < hi1:
     inc(hi2)
@@ -47,8 +47,8 @@ proc _crt_mulP1P2_3*(w: array[3, mpd_uint_t]; v: mpd_uint_t) {.inline.} =
 
 ##  Add 3 words from v to w. The result is known to fit in w.
 
-proc _crt_add3*(w: array[3, mpd_uint_t]; v: array[3, mpd_uint_t]) {.inline.} =
-  var carry: mpd_uint_t
+proc crtAdd3*(w: array[3, MpdUintT]; v: array[3, MpdUintT]) {.inline.} =
+  var carry: MpdUintT
   w[0] = w[0] + v[0]
   carry = (w[0] < v[0])
   w[1] = w[1] + v[1]
@@ -61,16 +61,16 @@ proc _crt_add3*(w: array[3, mpd_uint_t]; v: array[3, mpd_uint_t]) {.inline.} =
 
 ##  Divide 3 words in u by v, store result in w, return remainder.
 
-proc _crt_div3*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; v: mpd_uint_t): mpd_uint_t {.inline.} =
-  var r1: mpd_uint_t = u[2]
-  var r2: mpd_uint_t
+proc crtDiv3*(w: ptr MpdUintT; u: ptr MpdUintT; v: MpdUintT): MpdUintT {.inline.} =
+  var r1: MpdUintT = u[2]
+  var r2: MpdUintT
   if r1 < v:
     w[2] = 0
   else:
-    _mpd_div_word(addr(w[2]), addr(r1), u[2], v)
+    mpdDivWord(addr(w[2]), addr(r1), u[2], v)
     ##  GCOV_NOT_REACHED
-  _mpd_div_words(addr(w[1]), addr(r2), r1, u[1], v)
-  _mpd_div_words(addr(w[0]), addr(r1), r2, u[0], v)
+  mpdDivWords(addr(w[1]), addr(r2), r1, u[1], v)
+  mpdDivWords(addr(w[0]), addr(r1), r2, u[0], v)
   return r1
 
 ##
@@ -108,46 +108,46 @@ proc _crt_div3*(w: ptr mpd_uint_t; u: ptr mpd_uint_t; v: mpd_uint_t): mpd_uint_t
 ##    3) If c <= cmax, then c_next = (c + zmax) / MPD_RADIX <= cmax.
 ##
 
-proc crt3*(x1: ptr mpd_uint_t; x2: ptr mpd_uint_t; x3: ptr mpd_uint_t; rsize: mpd_size_t) =
-  var p1: mpd_uint_t = mpd_moduli[P1]
-  var umod: mpd_uint_t
+proc crt3*(x1: ptr MpdUintT; x2: ptr MpdUintT; x3: ptr MpdUintT; rsize: MpdSizeT) =
+  var p1: MpdUintT = mpdModuli[p1]
+  var umod: MpdUintT
   when defined(PPRO):
     var dmod: cdouble
-    var dinvmod: array[3, uint32_t]
+    var dinvmod: array[3, uint32T]
   var
-    a1: mpd_uint_t
-    a2: mpd_uint_t
-    a3: mpd_uint_t
-  var s: mpd_uint_t
+    a1: MpdUintT
+    a2: MpdUintT
+    a3: MpdUintT
+  var s: MpdUintT
   var
-    z: array[3, mpd_uint_t]
-    t: array[3, mpd_uint_t]
-  var carry: array[3, mpd_uint_t] = [0, 0, 0]
+    z: array[3, MpdUintT]
+    t: array[3, MpdUintT]
+  var carry: array[3, MpdUintT] = [0, 0, 0]
   var
-    hi: mpd_uint_t
-    lo: mpd_uint_t
-  var i: mpd_size_t
+    hi: MpdUintT
+    lo: MpdUintT
+  var i: MpdSizeT
   i = 0
   while i < rsize:
     a1 = x1[i]
     a2 = x2[i]
     a3 = x3[i]
-    SETMODULUS(P2)
-    s = ext_submod(a2, a1, umod)
-    s = MULMOD(s, INV_P1_MOD_P2)
-    _mpd_mul_words(addr(hi), addr(lo), s, p1)
+    setmodulus(p2)
+    s = extSubmod(a2, a1, umod)
+    s = mulmod(s, inv_P1Mod_P2)
+    mpdMulWords(addr(hi), addr(lo), s, p1)
     lo = lo + a1
     if lo < a1:
       inc(hi)
-    SETMODULUS(P3)
-    s = dw_submod(a3, hi, lo, umod)
-    s = MULMOD(s, INV_P1P2_MOD_P3)
+    setmodulus(p3)
+    s = dwSubmod(a3, hi, lo, umod)
+    s = mulmod(s, inv_P1p2Mod_P3)
     z[0] = lo
     z[1] = hi
     z[2] = 0
-    _crt_mulP1P2_3(t, s)
-    _crt_add3(z, t)
-    _crt_add3(carry, z)
-    x1[i] = _crt_div3(carry, carry, MPD_RADIX)
+    crtMulP1P23(t, s)
+    crtAdd3(z, t)
+    crtAdd3(carry, z)
+    x1[i] = crtDiv3(carry, carry, mpd_Radix)
     inc(i)
   assert(carry[0] == 0 and carry[1] == 0 and carry[2] == 0)

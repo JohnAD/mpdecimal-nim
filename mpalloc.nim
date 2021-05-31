@@ -28,28 +28,29 @@
 import
   mpdecimal, mpalloc, typearith
 
-when defined(_MSC_VER):
+when defined(msc_Ver):
 ##  Guaranteed minimum allocation for a coefficient. May be changed once
 ##    at program start using mpd_setminalloc().
 
-var MPD_MINALLOC*: mpd_ssize_t = MPD_MINALLOC_MIN
+var MPD_MINALLOC*: MpdSsizeT = mpd_Minalloc_Min
 
 ##  Custom allocation and free functions
-##  c2nim TODO void *(* mpd_mallocfunc)(size_t size) = malloc;
-##  c2nim TODO void *(* mpd_reallocfunc)(void *ptr, size_t size) = realloc;
-##  c2nim TODO void *(* mpd_callocfunc)(size_t nmemb, size_t size) = calloc;
-##  c2nim TODO void (* mpd_free)(void *ptr) = free;
+##  C2NIM:
+##
+##  void *(* mpd_mallocfunc)(size_t size) = malloc;
+##  void *(* mpd_reallocfunc)(void *ptr, size_t size) = realloc;
+##  void *(* mpd_callocfunc)(size_t nmemb, size_t size) = calloc;
+##  void (* mpd_free)(void *ptr) = free;
 ##  emulate calloc if it is not available
 
-proc mpd_callocfunc_em*(nmemb: csize; size: csize): pointer =
+proc mpdCallocfuncEm*(nmemb: csize; size: csize): pointer =
   var `ptr`: pointer
   var req: csize
-  var overflow: mpd_size_t
-  req = mul_size_t_overflow(cast[mpd_size_t](nmemb), cast[mpd_size_t](size),
-                          addr(overflow))
+  var overflow: MpdSizeT
+  req = mulSizeTOverflow(cast[MpdSizeT](nmemb), cast[MpdSizeT](size), addr(overflow))
   if overflow:
     return nil
-  `ptr` = mpd_mallocfunc(req)
+  `ptr` = mpdMallocfunc(req)
   if `ptr` == nil:
     return nil
   memset(`ptr`, 0, req)
@@ -57,36 +58,36 @@ proc mpd_callocfunc_em*(nmemb: csize; size: csize): pointer =
 
 ##  malloc with overflow checking
 
-proc mpd_alloc*(nmemb: mpd_size_t; size: mpd_size_t): pointer =
+proc mpdAlloc*(nmemb: MpdSizeT; size: MpdSizeT): pointer =
   var
-    req: mpd_size_t
-    overflow: mpd_size_t
-  req = mul_size_t_overflow(nmemb, size, addr(overflow))
+    req: MpdSizeT
+    overflow: MpdSizeT
+  req = mulSizeTOverflow(nmemb, size, addr(overflow))
   if overflow:
     return nil
-  return mpd_mallocfunc(req)
+  return mpdMallocfunc(req)
 
 ##  calloc with overflow checking
 
-proc mpd_calloc*(nmemb: mpd_size_t; size: mpd_size_t): pointer =
-  var overflow: mpd_size_t
-  cast[nil](mul_size_t_overflow(nmemb, size, addr(overflow)))
+proc mpdCalloc*(nmemb: MpdSizeT; size: MpdSizeT): pointer =
+  var overflow: MpdSizeT
+  cast[nil](mulSizeTOverflow(nmemb, size, addr(overflow)))
   if overflow:
     return nil
-  return mpd_callocfunc(nmemb, size)
+  return mpdCallocfunc(nmemb, size)
 
 ##  realloc with overflow checking
 
-proc mpd_realloc*(`ptr`: pointer; nmemb: mpd_size_t; size: mpd_size_t; err: ptr uint8_t): pointer =
+proc mpdRealloc*(`ptr`: pointer; nmemb: MpdSizeT; size: MpdSizeT; err: ptr uint8T): pointer =
   var new: pointer
   var
-    req: mpd_size_t
-    overflow: mpd_size_t
-  req = mul_size_t_overflow(nmemb, size, addr(overflow))
+    req: MpdSizeT
+    overflow: MpdSizeT
+  req = mulSizeTOverflow(nmemb, size, addr(overflow))
   if overflow:
     err[] = 1
     return `ptr`
-  new = mpd_reallocfunc(`ptr`, req)
+  new = mpdReallocfunc(`ptr`, req)
   if new == nil:
     err[] = 1
     return `ptr`
@@ -94,30 +95,30 @@ proc mpd_realloc*(`ptr`: pointer; nmemb: mpd_size_t; size: mpd_size_t; err: ptr 
 
 ##  struct hack malloc with overflow checking
 
-proc mpd_sh_alloc*(struct_size: mpd_size_t; nmemb: mpd_size_t; size: mpd_size_t): pointer =
+proc mpdShAlloc*(structSize: MpdSizeT; nmemb: MpdSizeT; size: MpdSizeT): pointer =
   var
-    req: mpd_size_t
-    overflow: mpd_size_t
-  req = mul_size_t_overflow(nmemb, size, addr(overflow))
+    req: MpdSizeT
+    overflow: MpdSizeT
+  req = mulSizeTOverflow(nmemb, size, addr(overflow))
   if overflow:
     return nil
-  req = add_size_t_overflow(req, struct_size, addr(overflow))
+  req = addSizeTOverflow(req, structSize, addr(overflow))
   if overflow:
     return nil
-  return mpd_mallocfunc(req)
+  return mpdMallocfunc(req)
 
 ##  Allocate a new decimal with a coefficient of length 'nwords'. In case
 ##    of an error the return value is NULL.
 
-proc mpd_qnew_size*(nwords: mpd_ssize_t): ptr mpd_t =
-  var result: ptr mpd_t
-  nwords = if (nwords < MPD_MINALLOC): MPD_MINALLOC else: nwords
-  result = mpd_alloc(1, sizeof(result[]))
+proc mpdQnewSize*(nwords: MpdSsizeT): ptr MpdT =
+  var result: ptr MpdT
+  nwords = if (nwords < mpd_Minalloc): mpd_Minalloc else: nwords
+  result = mpdAlloc(1, sizeof(result[]))
   if result == nil:
     return nil
-  result.data = mpd_alloc(nwords, sizeof(result.data[]))
+  result.data = mpdAlloc(nwords, sizeof(result.data[]))
   if result.data == nil:
-    mpd_free(result)
+    mpdFree(result)
     return nil
   result.flags = 0
   result.exp = 0
@@ -129,17 +130,17 @@ proc mpd_qnew_size*(nwords: mpd_ssize_t): ptr mpd_t =
 ##  Allocate a new decimal with a coefficient of length MPD_MINALLOC.
 ##    In case of an error the return value is NULL.
 
-proc mpd_qnew*(): ptr mpd_t =
-  return mpd_qnew_size(MPD_MINALLOC)
+proc mpdQnew*(): ptr MpdT =
+  return mpdQnewSize(mpd_Minalloc)
 
 ##  Allocate new decimal. Caller can check for NULL or MPD_Malloc_error.
 ##    Raises on error.
 
-proc mpd_new*(ctx: ptr mpd_context_t): ptr mpd_t =
-  var result: ptr mpd_t
-  result = mpd_qnew()
+proc mpdNew*(ctx: ptr MpdContextT): ptr MpdT =
+  var result: ptr MpdT
+  result = mpdQnew()
   if result == nil:
-    mpd_addstatus_raise(ctx, MPD_Malloc_error)
+    mpdAddstatusRaise(ctx, mPD_MallocError)
   return result
 
 ##
@@ -151,20 +152,20 @@ proc mpd_new*(ctx: ptr mpd_context_t): ptr mpd_t =
 ##  Otherwise, set 'result' to NaN and update 'status' with MPD_Malloc_error.
 ##
 
-proc mpd_switch_to_dyn*(result: ptr mpd_t; nwords: mpd_ssize_t; status: ptr uint32_t): cint =
-  var p: ptr mpd_uint_t = result.data
+proc mpdSwitchToDyn*(result: ptr MpdT; nwords: MpdSsizeT; status: ptr uint32T): cint =
+  var p: ptr MpdUintT = result.data
   assert(nwords >= result.alloc)
-  result.data = mpd_alloc(nwords, sizeof(result.data[]))
+  result.data = mpdAlloc(nwords, sizeof(result.data[]))
   if result.data == nil:
     result.data = p
-    mpd_set_qnan(result)
-    mpd_set_positive(result)
+    mpdSetQnan(result)
+    mpdSetPositive(result)
     result.exp = result.digits = result.len = 0
-    status[] = status[] or MPD_Malloc_error
+    status[] = status[] or mPD_MallocError
     return 0
   memcpy(result.data, p, result.alloc * (sizeof(result.data[])))
   result.alloc = nwords
-  mpd_set_dynamic_data(result)
+  mpdSetDynamicData(result)
   return 1
 
 ##
@@ -174,19 +175,18 @@ proc mpd_switch_to_dyn*(result: ptr mpd_t; nwords: mpd_ssize_t; status: ptr uint
 ##  malloc fails, set 'result' to NaN and update 'status' with MPD_Malloc_error.
 ##
 
-proc mpd_switch_to_dyn_zero*(result: ptr mpd_t; nwords: mpd_ssize_t;
-                            status: ptr uint32_t): cint =
-  var p: ptr mpd_uint_t = result.data
-  result.data = mpd_calloc(nwords, sizeof(result.data[]))
+proc mpdSwitchToDynZero*(result: ptr MpdT; nwords: MpdSsizeT; status: ptr uint32T): cint =
+  var p: ptr MpdUintT = result.data
+  result.data = mpdCalloc(nwords, sizeof(result.data[]))
   if result.data == nil:
     result.data = p
-    mpd_set_qnan(result)
-    mpd_set_positive(result)
+    mpdSetQnan(result)
+    mpdSetPositive(result)
     result.exp = result.digits = result.len = 0
-    status[] = status[] or MPD_Malloc_error
+    status[] = status[] or mPD_MallocError
     return 0
   result.alloc = nwords
-  mpd_set_dynamic_data(result)
+  mpdSetDynamicData(result)
   return 1
 
 ##
@@ -204,16 +204,16 @@ proc mpd_switch_to_dyn_zero*(result: ptr mpd_t; nwords: mpd_ssize_t;
 ##        'result' is unchanged. Reuse the now oversized coefficient. Return 1.
 ##
 
-proc mpd_realloc_dyn*(result: ptr mpd_t; nwords: mpd_ssize_t; status: ptr uint32_t): cint =
-  var err: uint8_t = 0
-  result.data = mpd_realloc(result.data, nwords, sizeof(result.data[]), addr(err))
+proc mpdReallocDyn*(result: ptr MpdT; nwords: MpdSsizeT; status: ptr uint32T): cint =
+  var err: uint8T = 0
+  result.data = mpdRealloc(result.data, nwords, sizeof(result.data[]), addr(err))
   if not err:
     result.alloc = nwords
   elif nwords > result.alloc:
-    mpd_set_qnan(result)
-    mpd_set_positive(result)
+    mpdSetQnan(result)
+    mpdSetPositive(result)
     result.exp = result.digits = result.len = 0
-    status[] = status[] or MPD_Malloc_error
+    status[] = status[] or mPD_MallocError
     return 0
   return 1
 
@@ -227,15 +227,15 @@ proc mpd_realloc_dyn*(result: ptr mpd_t; nwords: mpd_ssize_t; status: ptr uint32
 ##  On failure the value of 'result' is unchanged.
 ##
 
-proc mpd_switch_to_dyn_cxx*(result: ptr mpd_t; nwords: mpd_ssize_t): cint =
+proc mpdSwitchToDynCxx*(result: ptr MpdT; nwords: MpdSsizeT): cint =
   assert(nwords >= result.alloc)
-  var data: ptr mpd_uint_t = mpd_alloc(nwords, sizeof(result.data[]))
+  var data: ptr MpdUintT = mpdAlloc(nwords, sizeof(result.data[]))
   if data == nil:
     return 0
   memcpy(data, result.data, result.alloc * (sizeof(result.data[])))
   result.data = data
   result.alloc = nwords
-  mpd_set_dynamic_data(result)
+  mpdSetDynamicData(result)
   return 1
 
 ##
@@ -253,10 +253,9 @@ proc mpd_switch_to_dyn_cxx*(result: ptr mpd_t; nwords: mpd_ssize_t): cint =
 ##        'result' is unchanged. Reuse the now oversized coefficient. Return 1.
 ##
 
-proc mpd_realloc_dyn_cxx*(result: ptr mpd_t; nwords: mpd_ssize_t): cint =
-  var err: uint8_t = 0
-  var p: ptr mpd_uint_t = mpd_realloc(result.data, nwords, sizeof(result.data[]),
-                                 addr(err))
+proc mpdReallocDynCxx*(result: ptr MpdT; nwords: MpdSsizeT): cint =
+  var err: uint8T = 0
+  var p: ptr MpdUintT = mpdRealloc(result.data, nwords, sizeof(result.data[]), addr(err))
   if not err:
     result.data = p
     result.alloc = nwords

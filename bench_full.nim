@@ -28,14 +28,14 @@
 import
   mpdecimal
 
-proc err_exit*(msg: cstring) =
+proc errExit*(msg: cstring) =
   fprintf(stderr, "%s\n", msg)
   exit(1)
 
-proc new_mpd*(): ptr mpd_t =
-  var x: ptr mpd_t = mpd_qnew()
+proc newMpd*(): ptr MpdT =
+  var x: ptr MpdT = mpdQnew()
   if x == nil:
-    err_exit("out of memory")
+    errExit("out of memory")
   return x
 
 ##
@@ -48,99 +48,99 @@ proc new_mpd*(): ptr mpd_t =
 ##  escaped and can be used for coloring.
 ##
 
-proc color_point*(x0: ptr mpd_t; y0: ptr mpd_t; maxiter: clong; ctx: ptr mpd_context_t): cint =
+proc colorPoint*(x0: ptr MpdT; y0: ptr MpdT; maxiter: clong; ctx: ptr MpdContextT): cint =
   var
-    x: ptr mpd_t
-    y: ptr mpd_t
-    sq_x: ptr mpd_t
-    sq_y: ptr mpd_t
+    x: ptr MpdT
+    y: ptr MpdT
+    sqX: ptr MpdT
+    sqY: ptr MpdT
   var
-    two: ptr mpd_t
-    four: ptr mpd_t
-    c: ptr mpd_t
+    two: ptr MpdT
+    four: ptr MpdT
+    c: ptr MpdT
   var i: clong
-  x = new_mpd()
-  y = new_mpd()
-  mpd_set_u32(x, 0, ctx)
-  mpd_set_u32(y, 0, ctx)
-  sq_x = new_mpd()
-  sq_y = new_mpd()
-  mpd_set_u32(sq_x, 0, ctx)
-  mpd_set_u32(sq_y, 0, ctx)
-  two = new_mpd()
-  four = new_mpd()
-  mpd_set_u32(two, 2, ctx)
-  mpd_set_u32(four, 4, ctx)
-  c = new_mpd()
-  mpd_set_u32(c, 0, ctx)
+  x = newMpd()
+  y = newMpd()
+  mpdSetU32(x, 0, ctx)
+  mpdSetU32(y, 0, ctx)
+  sqX = newMpd()
+  sqY = newMpd()
+  mpdSetU32(sqX, 0, ctx)
+  mpdSetU32(sqY, 0, ctx)
+  two = newMpd()
+  four = newMpd()
+  mpdSetU32(two, 2, ctx)
+  mpdSetU32(four, 4, ctx)
+  c = newMpd()
+  mpdSetU32(c, 0, ctx)
   i = 0
-  while i < maxiter and mpd_cmp(c, four, ctx) <= 0:
-    mpd_mul(y, x, y, ctx)
-    mpd_mul(y, y, two, ctx)
-    mpd_add(y, y, y0, ctx)
-    mpd_sub(x, sq_x, sq_y, ctx)
-    mpd_add(x, x, x0, ctx)
-    mpd_mul(sq_x, x, x, ctx)
-    mpd_mul(sq_y, y, y, ctx)
-    mpd_add(c, sq_x, sq_y, ctx)
+  while i < maxiter and mpdCmp(c, four, ctx) <= 0:
+    mpdMul(y, x, y, ctx)
+    mpdMul(y, y, two, ctx)
+    mpdAdd(y, y, y0, ctx)
+    mpdSub(x, sqX, sqY, ctx)
+    mpdAdd(x, x, x0, ctx)
+    mpdMul(sqX, x, x, ctx)
+    mpdMul(sqY, y, y, ctx)
+    mpdAdd(c, sqX, sqY, ctx)
     inc(i)
-  mpd_del(c)
-  mpd_del(four)
-  mpd_del(two)
-  mpd_del(sq_y)
-  mpd_del(sq_x)
-  mpd_del(y)
-  mpd_del(x)
+  mpdDel(c)
+  mpdDel(four)
+  mpdDel(two)
+  mpdDel(sqY)
+  mpdDel(sqX)
+  mpdDel(y)
+  mpdDel(x)
   return i
 
 proc main*(argc: cint; argv: cstringArray): cint =
-  var ctx: mpd_context_t
+  var ctx: MpdContextT
   var
-    x0: ptr mpd_t
-    y0: ptr mpd_t
+    x0: ptr MpdT
+    y0: ptr MpdT
   var
-    sqrt_2: ptr mpd_t
-    xstep: ptr mpd_t
-    ystep: ptr mpd_t
-  var prec: mpd_ssize_t = 19
+    sqrt2: ptr MpdT
+    xstep: ptr MpdT
+    ystep: ptr MpdT
+  var prec: MpdSsizeT = 19
   var iter: clong = 1000
   var points: array[40, array[80, cint]]
   var
     i: cint
     j: cint
   var
-    start_clock: clock_t
-    end_clock: clock_t
+    startClock: ClockT
+    endClock: ClockT
   if argc != 3:
     fprintf(stderr, "usage: ./bench prec iter\n")
     exit(1)
   prec = strtoll(argv[1], nil, 10)
   iter = strtol(argv[2], nil, 10)
-  mpd_init(addr(ctx), prec)
+  mpdInit(addr(ctx), prec)
   ##  no more MPD_MINALLOC changes after here
-  sqrt_2 = new_mpd()
-  xstep = new_mpd()
-  ystep = new_mpd()
-  x0 = new_mpd()
-  y0 = new_mpd()
-  mpd_set_u32(sqrt_2, 2, addr(ctx))
-  mpd_sqrt(sqrt_2, sqrt_2, addr(ctx))
-  mpd_div_u32(xstep, sqrt_2, 40, addr(ctx))
-  mpd_div_u32(ystep, sqrt_2, 20, addr(ctx))
-  start_clock = clock()
-  mpd_copy(y0, sqrt_2, addr(ctx))
+  sqrt2 = newMpd()
+  xstep = newMpd()
+  ystep = newMpd()
+  x0 = newMpd()
+  y0 = newMpd()
+  mpdSetU32(sqrt2, 2, addr(ctx))
+  mpdSqrt(sqrt2, sqrt2, addr(ctx))
+  mpdDivU32(xstep, sqrt2, 40, addr(ctx))
+  mpdDivU32(ystep, sqrt2, 20, addr(ctx))
+  startClock = clock()
+  mpdCopy(y0, sqrt2, addr(ctx))
   i = 0
   while i < 40:
-    mpd_copy(x0, sqrt_2, addr(ctx))
-    mpd_set_negative(x0)
+    mpdCopy(x0, sqrt2, addr(ctx))
+    mpdSetNegative(x0)
     j = 0
     while j < 80:
-      points[i][j] = color_point(x0, y0, iter, addr(ctx))
-      mpd_add(x0, x0, xstep, addr(ctx))
+      points[i][j] = colorPoint(x0, y0, iter, addr(ctx))
+      mpdAdd(x0, x0, xstep, addr(ctx))
       inc(j)
-    mpd_sub(y0, y0, ystep, addr(ctx))
+    mpdSub(y0, y0, ystep, addr(ctx))
     inc(i)
-  end_clock = clock()
+  endClock = clock()
   when defined(BENCH_VERBOSE):
     i = 0
     while i < 40:
@@ -162,10 +162,10 @@ proc main*(argc: cint; argv: cstringArray): cint =
     cast[nil](points)
     ##  suppress gcc warning
   printf("time: %f\n\n",
-         (double)(end_clock - start_clock) div cast[cdouble](CLOCKS_PER_SEC))
-  mpd_del(y0)
-  mpd_del(x0)
-  mpd_del(ystep)
-  mpd_del(xstep)
-  mpd_del(sqrt_2)
+         (double)(endClock - startClock) div cast[cdouble](clocks_Per_Sec))
+  mpdDel(y0)
+  mpdDel(x0)
+  mpdDel(ystep)
+  mpdDel(xstep)
+  mpdDel(sqrt2)
   return 0

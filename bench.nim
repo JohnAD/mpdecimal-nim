@@ -28,83 +28,83 @@
 import
   mpdecimal
 
-proc err_exit*(msg: cstring) =
+proc errExit*(msg: cstring) =
   fprintf(stderr, "%s\n", msg)
   exit(1)
 
-proc new_mpd*(): ptr mpd_t =
-  var x: ptr mpd_t = mpd_qnew()
+proc newMpd*(): ptr MpdT =
+  var x: ptr MpdT = mpdQnew()
   if x == nil:
-    err_exit("out of memory")
+    errExit("out of memory")
   return x
 
 ##  Nonsense version of escape-time algorithm for calculating a mandelbrot
 ##  set. Just for benchmarking.
 
-proc color_point*(x0: ptr mpd_t; y0: ptr mpd_t; maxiter: clong; ctx: ptr mpd_context_t) =
+proc colorPoint*(x0: ptr MpdT; y0: ptr MpdT; maxiter: clong; ctx: ptr MpdContextT) =
   var
-    x: ptr mpd_t
-    y: ptr mpd_t
-    sq_x: ptr mpd_t
-    sq_y: ptr mpd_t
-  var two: ptr mpd_t
-  x = new_mpd()
-  y = new_mpd()
-  mpd_set_u32(x, 0, ctx)
-  mpd_set_u32(y, 0, ctx)
-  sq_x = new_mpd()
-  sq_y = new_mpd()
-  mpd_set_u32(sq_x, 0, ctx)
-  mpd_set_u32(sq_y, 0, ctx)
-  two = new_mpd()
-  mpd_set_u32(two, 2, ctx)
+    x: ptr MpdT
+    y: ptr MpdT
+    sqX: ptr MpdT
+    sqY: ptr MpdT
+  var two: ptr MpdT
+  x = newMpd()
+  y = newMpd()
+  mpdSetU32(x, 0, ctx)
+  mpdSetU32(y, 0, ctx)
+  sqX = newMpd()
+  sqY = newMpd()
+  mpdSetU32(sqX, 0, ctx)
+  mpdSetU32(sqY, 0, ctx)
+  two = newMpd()
+  mpdSetU32(two, 2, ctx)
   var i: clong = 0
   while i < maxiter:
-    mpd_mul(y, x, y, ctx)
-    mpd_mul(y, y, two, ctx)
-    mpd_add(y, y, y0, ctx)
-    mpd_sub(x, sq_x, sq_y, ctx)
-    mpd_add(x, x, x0, ctx)
-    mpd_mul(sq_x, x, x, ctx)
-    mpd_mul(sq_y, y, y, ctx)
+    mpdMul(y, x, y, ctx)
+    mpdMul(y, y, two, ctx)
+    mpdAdd(y, y, y0, ctx)
+    mpdSub(x, sqX, sqY, ctx)
+    mpdAdd(x, x, x0, ctx)
+    mpdMul(sqX, x, x, ctx)
+    mpdMul(sqY, y, y, ctx)
     inc(i)
-  mpd_copy(x0, x, ctx)
-  mpd_del(two)
-  mpd_del(sq_y)
-  mpd_del(sq_x)
-  mpd_del(y)
-  mpd_del(x)
+  mpdCopy(x0, x, ctx)
+  mpdDel(two)
+  mpdDel(sqY)
+  mpdDel(sqX)
+  mpdDel(y)
+  mpdDel(x)
 
 proc main*(argc: cint; argv: cstringArray): cint =
-  var ctx: mpd_context_t
+  var ctx: MpdContextT
   var
-    x0: ptr mpd_t
-    y0: ptr mpd_t
-  var prec: uint32_t = 19
+    x0: ptr MpdT
+    y0: ptr MpdT
+  var prec: uint32T = 19
   var iter: clong = 10000000
   var
-    start_clock: clock_t
-    end_clock: clock_t
+    startClock: ClockT
+    endClock: ClockT
   if argc != 3:
-    err_exit("usage: bench prec iter\n")
+    errExit("usage: bench prec iter\n")
   prec = strtoul(argv[1], nil, 10)
   iter = strtol(argv[2], nil, 10)
-  mpd_init(addr(ctx), prec)
+  mpdInit(addr(ctx), prec)
   ##  no more MPD_MINALLOC changes after here
-  x0 = new_mpd()
-  y0 = new_mpd()
-  mpd_set_string(x0, "0.222", addr(ctx))
-  mpd_set_string(y0, "0.333", addr(ctx))
-  if ctx.status and MPD_Errors:
-    mpd_del(y0)
-    mpd_del(x0)
-    err_exit("unexpected error during conversion")
-  start_clock = clock()
-  color_point(x0, y0, iter, addr(ctx))
-  end_clock = clock()
-  mpd_print(x0)
+  x0 = newMpd()
+  y0 = newMpd()
+  mpdSetString(x0, "0.222", addr(ctx))
+  mpdSetString(y0, "0.333", addr(ctx))
+  if ctx.status and mPD_Errors:
+    mpdDel(y0)
+    mpdDel(x0)
+    errExit("unexpected error during conversion")
+  startClock = clock()
+  colorPoint(x0, y0, iter, addr(ctx))
+  endClock = clock()
+  mpdPrint(x0)
   fprintf(stderr, "time: %f\n\n",
-          (double)(end_clock - start_clock) div cast[cdouble](CLOCKS_PER_SEC))
-  mpd_del(y0)
-  mpd_del(x0)
+          (double)(endClock - startClock) div cast[cdouble](clocks_Per_Sec))
+  mpdDel(y0)
+  mpdDel(x0)
   return 0

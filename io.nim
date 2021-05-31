@@ -31,7 +31,7 @@ import
 ##  This file contains functions for decimal <-> string conversions, including
 ##    PEP-3101 formatting for numeric types.
 
-when defined(__GNUC__) and not defined(__INTEL_COMPILER) and __GNUC__ >= 7:
+when defined(gnuc) and not defined(intel_Compiler) and gnuc >= 7:
 ##
 ##  Work around the behavior of tolower() and strcasecmp() in certain
 ##  locales. For example, in tr_TR.utf8:
@@ -41,8 +41,8 @@ when defined(__GNUC__) and not defined(__INTEL_COMPILER) and __GNUC__ >= 7:
 ##  u is the exact uppercase version of l; n is strlen(l) or strlen(l)+1
 ##
 
-proc _mpd_strneq*(s: cstring; l: cstring; u: cstring; n: csize): cint {.inline.} =
-  while dec(n) != SIZE_MAX:
+proc mpdStrneq*(s: cstring; l: cstring; u: cstring; n: csize): cint {.inline.} =
+  while dec(n) != size_Max:
     if s[] != l[] and s[] != u[]:
       return 0
     inc(s)
@@ -50,13 +50,13 @@ proc _mpd_strneq*(s: cstring; l: cstring; u: cstring; n: csize): cint {.inline.}
     inc(l)
   return 1
 
-proc strtoexp*(s: cstring): mpd_ssize_t =
+proc strtoexp*(s: cstring): MpdSsizeT =
   var `end`: cstring
-  var retval: mpd_ssize_t
+  var retval: MpdSsizeT
   errno = 0
-  retval = mpd_strtossize(s, addr(`end`), 10)
+  retval = mpdStrtossize(s, addr(`end`), 10)
   if errno == 0 and not (s[] != '\x00' and `end`[] == '\x00'):
-    errno = EINVAL
+    errno = einval
   return retval
 
 ##
@@ -65,8 +65,7 @@ proc strtoexp*(s: cstring): mpd_ssize_t =
 ##  consist of digits and an optional single decimal point at 'dpoint'.
 ##
 
-proc string_to_coeff*(data: ptr mpd_uint_t; s: cstring; dpoint: cstring; r: cint;
-                     len: csize) =
+proc stringToCoeff*(data: ptr MpdUintT; s: cstring; dpoint: cstring; r: cint; len: csize) =
   var j: cint
   if r > 0:
     data[dec(len)] = 0
@@ -77,10 +76,10 @@ proc string_to_coeff*(data: ptr mpd_uint_t; s: cstring; dpoint: cstring; r: cint
       data[len] = 10 * data[len] + (s[] - '0')
       inc(j)
       inc(s)
-  while dec(len) != SIZE_MAX:
+  while dec(len) != size_Max:
     data[len] = 0
     j = 0
-    while j < MPD_RDIGITS:
+    while j < mpd_Rdigits:
       if s == dpoint:
         inc(s)
       data[len] = 10 * data[len] + (s[] - '0')
@@ -106,8 +105,8 @@ proc string_to_coeff*(data: ptr mpd_uint_t; s: cstring; dpoint: cstring; r: cint
 ##  later by strtoexp().
 ##
 
-proc scan_dpoint_exp*(s: cstring; dpoint: cstringArray; exp: cstringArray;
-                     `end`: cstringArray): cstring =
+proc scanDpointExp*(s: cstring; dpoint: cstringArray; exp: cstringArray;
+                   `end`: cstringArray): cstring =
   var coeff: cstring = nil
   dpoint[] = nil
   exp[] = nil
@@ -139,7 +138,7 @@ proc scan_dpoint_exp*(s: cstring; dpoint: cstringArray; exp: cstringArray;
 
 ##  scan the payload of a NaN
 
-proc scan_payload*(s: cstring; `end`: cstringArray): cstring =
+proc scanPayload*(s: cstring; `end`: cstringArray): cstring =
   var coeff: cstring
   while s[] == '0':
     inc(s)
@@ -151,12 +150,11 @@ proc scan_payload*(s: cstring; `end`: cstringArray): cstring =
 
 ##  convert a character string to a decimal
 
-proc mpd_qset_string*(dec: ptr mpd_t; s: cstring; ctx: ptr mpd_context_t;
-                     status: ptr uint32_t) =
+proc mpdQsetString*(dec: ptr MpdT; s: cstring; ctx: ptr MpdContextT; status: ptr uint32T) =
   var
-    q: mpd_ssize_t
-    r: mpd_ssize_t
-    len: mpd_ssize_t
+    q: MpdSsizeT
+    r: MpdSsizeT
+    len: MpdSsizeT
   var
     coeff: cstring
     `end`: cstring
@@ -164,147 +162,168 @@ proc mpd_qset_string*(dec: ptr mpd_t; s: cstring; ctx: ptr mpd_context_t;
     dpoint: cstring = nil
     exp: cstring = nil
   var digits: csize
-  var sign: uint8_t = MPD_POS
-  mpd_set_flags(dec, 0)
+  var sign: uint8T = mpd_Pos
+  mpdSetFlags(dec, 0)
   dec.len = 0
   dec.exp = 0
   ##  sign
   if s[] == '+':
     inc(s)
   elif s[] == '-':
-    mpd_set_negative(dec)
-    sign = MPD_NEG
+    mpdSetNegative(dec)
+    sign = mpd_Neg
     inc(s)
-  if _mpd_strneq(s, "nan", "NAN", 3):
+  if mpdStrneq(s, "nan", "NAN", 3):
     ##  NaN
     inc(s, 3)
-    mpd_setspecial(dec, sign, MPD_NAN)
+    mpdSetspecial(dec, sign, mpd_Nan)
     if s[] == '\x00':
       return
-    if (coeff = scan_payload(s, addr(`end`))) == nil:
-      break conversion_error
+    if (coeff = scanPayload(s, addr(`end`))) == nil:
+      break conversionError
     if coeff[] == '\x00':
       return
     digits = `end` - coeff
     ##  prec >= 1, clamp is 0 or 1
-    if digits > (size_t)(ctx.prec - ctx.clamp):
-      break conversion_error
-  elif _mpd_strneq(s, "snan", "SNAN", 4):
+    if digits > (sizeT)(ctx.prec - ctx.clamp):
+      break conversionError
+  elif mpdStrneq(s, "snan", "SNAN", 4):
     inc(s, 4)
-    mpd_setspecial(dec, sign, MPD_SNAN)
+    mpdSetspecial(dec, sign, mpd_Snan)
     if s[] == '\x00':
       return
-    if (coeff = scan_payload(s, addr(`end`))) == nil:
-      break conversion_error
+    if (coeff = scanPayload(s, addr(`end`))) == nil:
+      break conversionError
     if coeff[] == '\x00':
       return
     digits = `end` - coeff
-    if digits > (size_t)(ctx.prec - ctx.clamp):
-      break conversion_error
-  elif _mpd_strneq(s, "inf", "INF", 3):
+    if digits > (sizeT)(ctx.prec - ctx.clamp):
+      break conversionError
+  elif mpdStrneq(s, "inf", "INF", 3):
     inc(s, 3)
-    if s[] == '\x00' or _mpd_strneq(s, "inity", "INITY", 6):
+    if s[] == '\x00' or mpdStrneq(s, "inity", "INITY", 6):
       ##  numeric-value: infinity
-      mpd_setspecial(dec, sign, MPD_INF)
+      mpdSetspecial(dec, sign, mpd_Inf)
       return
-    break conversion_error
+    break conversionError
   else:
     ##  scan for start of coefficient, decimal point, indicator, end
-    if (coeff = scan_dpoint_exp(s, addr(dpoint), addr(exp), addr(`end`))) == nil:
-      break conversion_error
+    if (coeff = scanDpointExp(s, addr(dpoint), addr(exp), addr(`end`))) == nil:
+      break conversionError
     if exp:
       ##  exponent-part
       `end` = exp
       inc(exp)
       dec.exp = strtoexp(exp)
       if errno:
-        if not (errno == ERANGE and
-            (dec.exp == MPD_SSIZE_MAX or dec.exp == MPD_SSIZE_MIN)):
-          break conversion_error
+        if not (errno == erange and
+            (dec.exp == mpd_Ssize_Max or dec.exp == mpd_Ssize_Min)):
+          break conversionError
     digits = `end` - coeff
     if dpoint:
       var fracdigits: csize = `end` - dpoint - 1
       if dpoint > coeff:
         dec(digits)
-      if fracdigits > MPD_MAX_PREC:
-        break conversion_error
-      if dec.exp < MPD_SSIZE_MIN + cast[mpd_ssize_t](fracdigits):
-        dec.exp = MPD_SSIZE_MIN
+      if fracdigits > mpd_Max_Prec:
+        break conversionError
+      if dec.exp < mpd_Ssize_Min + cast[MpdSsizeT](fracdigits):
+        dec.exp = mpd_Ssize_Min
       else:
-        dec(dec.exp, cast[mpd_ssize_t](fracdigits))
-    if digits > MPD_MAX_PREC:
-      break conversion_error
-    if dec.exp > MPD_EXP_INF:
-      dec.exp = MPD_EXP_INF
-    if dec.exp == MPD_SSIZE_MIN:
-      dec.exp = MPD_SSIZE_MIN + 1
-  _mpd_idiv_word(addr(q), addr(r), cast[mpd_ssize_t](digits), MPD_RDIGITS)
+        dec(dec.exp, cast[MpdSsizeT](fracdigits))
+    if digits > mpd_Max_Prec:
+      break conversionError
+    if dec.exp > mpd_Exp_Inf:
+      dec.exp = mpd_Exp_Inf
+    if dec.exp == mpd_Ssize_Min:
+      dec.exp = mpd_Ssize_Min + 1
+  mpdIdivWord(addr(q), addr(r), cast[MpdSsizeT](digits), mpd_Rdigits)
   len = if (r == 0): q else: q + 1
   if len == 0:
-    break conversion_error
+    break conversionError
     ##  GCOV_NOT_REACHED
-  if not mpd_qresize(dec, len, status):
-    mpd_seterror(dec, MPD_Malloc_error, status)
+  if not mpdQresize(dec, len, status):
+    mpdSeterror(dec, mPD_MallocError, status)
     return
   dec.len = len
-  string_to_coeff(dec.data, coeff, dpoint, cast[cint](r), len)
-  mpd_setdigits(dec)
-  mpd_qfinalize(dec, ctx, status)
+  stringToCoeff(dec.data, coeff, dpoint, cast[cint](r), len)
+  mpdSetdigits(dec)
+  mpdQfinalize(dec, ctx, status)
   return
   ##  standard wants a positive NaN
-  mpd_seterror(dec, MPD_Conversion_syntax, status)
+  mpdSeterror(dec, mPD_ConversionSyntax, status)
 
 ##  convert a character string to a decimal, use a maxcontext for conversion
 
-proc mpd_qset_string_exact*(dec: ptr mpd_t; s: cstring; status: ptr uint32_t) =
-  var maxcontext: mpd_context_t
-  mpd_maxcontext(addr(maxcontext))
-  mpd_qset_string(dec, s, addr(maxcontext), status)
-  if status[] and (MPD_Inexact or MPD_Rounded or MPD_Clamped):
+proc mpdQsetStringExact*(dec: ptr MpdT; s: cstring; status: ptr uint32T) =
+  var maxcontext: MpdContextT
+  mpdMaxcontext(addr(maxcontext))
+  mpdQsetString(dec, s, addr(maxcontext), status)
+  if status[] and (mPD_Inexact or mPD_Rounded or mPD_Clamped):
     ##  we want exact results
-    mpd_seterror(dec, MPD_Invalid_operation, status)
-  status[] = status[] and MPD_Errors
+    mpdSeterror(dec, mPD_InvalidOperation, status)
+  status[] = status[] and mPD_Errors
 
 ##  Print word x with n decimal digits to string s. dot is either NULL
 ##    or the location of a decimal point.
-##  c2nim TODO
-## #define EXTRACT_DIGIT(s, x, d, dot) \
-##         if (s == dot) *s++ = '.'; *s++ = '0' + (char)(x / d); x %= d
-##
 
-proc word_to_string*(s: cstring; x: mpd_uint_t; n: cint; dot: cstring): cstring {.inline.} =
-  case n ##  c2nim TODO
-       ## #ifdef CONFIG_64
-       ##     case 20: EXTRACT_DIGIT(s, x, 10000000000000000000ULL, dot);
-       ##     case 19: EXTRACT_DIGIT(s, x, 1000000000000000000ULL, dot);
-       ##     case 18: EXTRACT_DIGIT(s, x, 100000000000000000ULL, dot);
-       ##     case 17: EXTRACT_DIGIT(s, x, 10000000000000000ULL, dot);
-       ##     case 16: EXTRACT_DIGIT(s, x, 1000000000000000ULL, dot);
-       ##     case 15: EXTRACT_DIGIT(s, x, 100000000000000ULL, dot);
-       ##     case 14: EXTRACT_DIGIT(s, x, 10000000000000ULL, dot);
-       ##     case 13: EXTRACT_DIGIT(s, x, 1000000000000ULL, dot);
-       ##     case 12: EXTRACT_DIGIT(s, x, 100000000000ULL, dot);
-       ##     case 11: EXTRACT_DIGIT(s, x, 10000000000ULL, dot);
-       ## #endif
-       ##
+proc wordToString*(s: cstring; x: MpdUintT; n: cint; dot: cstring): cstring {.inline.} =
+  case n ##  #ifdef CONFIG_64
+       ##      case 20: EXTRACT_DIGIT(s, x, 10000000000000000000ULL, dot); /* GCOV_NOT_REACHED */
+       ##      case 19: EXTRACT_DIGIT(s, x, 1000000000000000000ULL, dot);
+       ##      case 18: EXTRACT_DIGIT(s, x, 100000000000000000ULL, dot);
+       ##      case 17: EXTRACT_DIGIT(s, x, 10000000000000000ULL, dot);
+       ##      case 16: EXTRACT_DIGIT(s, x, 1000000000000000ULL, dot);
+       ##      case 15: EXTRACT_DIGIT(s, x, 100000000000000ULL, dot);
+       ##      case 14: EXTRACT_DIGIT(s, x, 10000000000000ULL, dot);
+       ##      case 13: EXTRACT_DIGIT(s, x, 1000000000000ULL, dot);
+       ##      case 12: EXTRACT_DIGIT(s, x, 100000000000ULL, dot);
+       ##      case 11: EXTRACT_DIGIT(s, x, 10000000000ULL, dot);
+       ##  #endif
   of 10:
-    EXTRACT_DIGIT(s, x, 1000000000, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 1000000000)
+    x = x mod 1000000000
   of 9:
-    EXTRACT_DIGIT(s, x, 100000000, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 100000000)
+    x = x mod 100000000
   of 8:
-    EXTRACT_DIGIT(s, x, 10000000, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 10000000)
+    x = x mod 10000000
   of 7:
-    EXTRACT_DIGIT(s, x, 1000000, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 1000000)
+    x = x mod 1000000
   of 6:
-    EXTRACT_DIGIT(s, x, 100000, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 100000)
+    x = x mod 100000
   of 5:
-    EXTRACT_DIGIT(s, x, 10000, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 10000)
+    x = x mod 10000
   of 4:
-    EXTRACT_DIGIT(s, x, 1000, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 1000)
+    x = x mod 1000
   of 3:
-    EXTRACT_DIGIT(s, x, 100, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 100)
+    x = x mod 100
   of 2:
-    EXTRACT_DIGIT(s, x, 10, dot)
+    if s == dot:
+      inc(s)[] = '.'
+    inc(s)[] = '0' + (char)(x div 10)
+    x = x mod 10
   else:
     if s == dot:
       inc(s)[] = '.'
@@ -314,44 +333,44 @@ proc word_to_string*(s: cstring; x: mpd_uint_t; n: cint; dot: cstring): cstring 
 
 ##  Print exponent x to string s. Undefined for MPD_SSIZE_MIN.
 
-proc exp_to_string*(s: cstring; x: mpd_ssize_t): cstring {.inline.} =
+proc expToString*(s: cstring; x: MpdSsizeT): cstring {.inline.} =
   var sign: char = '+'
   if x < 0:
     sign = '-'
     x = -x
   inc(s)[] = sign
-  return word_to_string(s, x, mpd_word_digits(x), nil)
+  return wordToString(s, x, mpdWordDigits(x), nil)
 
 ##  Print the coefficient of dec to string s. len(dec) > 0.
 
-proc coeff_to_string*(s: cstring; dec: ptr mpd_t): cstring {.inline.} =
-  var x: mpd_uint_t
-  var i: mpd_ssize_t
+proc coeffToString*(s: cstring; dec: ptr MpdT): cstring {.inline.} =
+  var x: MpdUintT
+  var i: MpdSsizeT
   ##  most significant word
-  x = mpd_msword(dec)
-  s = word_to_string(s, x, mpd_word_digits(x), nil)
+  x = mpdMsword(dec)
+  s = wordToString(s, x, mpdWordDigits(x), nil)
   ##  remaining full words
   i = dec.len - 2
   while i >= 0:
     x = dec.data[i]
-    s = word_to_string(s, x, MPD_RDIGITS, nil)
+    s = wordToString(s, x, mpd_Rdigits, nil)
     dec(i)
   return s
 
 ##  Print the coefficient of dec to string s. len(dec) > 0. dot is either
 ##    NULL or a pointer to the location of a decimal point.
 
-proc coeff_to_string_dot*(s: cstring; dot: cstring; dec: ptr mpd_t): cstring {.inline.} =
-  var x: mpd_uint_t
-  var i: mpd_ssize_t
+proc coeffToStringDot*(s: cstring; dot: cstring; dec: ptr MpdT): cstring {.inline.} =
+  var x: MpdUintT
+  var i: MpdSsizeT
   ##  most significant word
-  x = mpd_msword(dec)
-  s = word_to_string(s, x, mpd_word_digits(x), dot)
+  x = mpdMsword(dec)
+  s = wordToString(s, x, mpdWordDigits(x), dot)
   ##  remaining full words
   i = dec.len - 2
   while i >= 0:
     x = dec.data[i]
-    s = word_to_string(s, x, MPD_RDIGITS, dot)
+    s = wordToString(s, x, mpd_Rdigits, dot)
     dec(i)
   return s
 
@@ -384,32 +403,31 @@ const
 ##  MPD_DEFAULT_DOTPLACE except for zeros in combination with MPD_FMT_EXP.
 ##
 
-proc _mpd_to_string*(result: cstringArray; dec: ptr mpd_t; flags: cint;
-                    dplace: mpd_ssize_t): mpd_ssize_t =
+proc mpdToString*(result: cstringArray; dec: ptr MpdT; flags: cint; dplace: MpdSsizeT): MpdSsizeT =
   var
     decstring: cstring = nil
     cp: cstring = nil
-  var ldigits: mpd_ssize_t
+  var ldigits: MpdSsizeT
   var
-    mem: mpd_ssize_t = 0
-    k: mpd_ssize_t
-  if mpd_isspecial(dec):
+    mem: MpdSsizeT = 0
+    k: MpdSsizeT
+  if mpdIsspecial(dec):
     mem = sizeof("-Infinity%")
-    if mpd_isnan(dec) and dec.len > 0:
+    if mpdIsnan(dec) and dec.len > 0:
       ##  diagnostic code
       inc(mem, dec.digits)
-    cp = decstring = mpd_alloc(mem, sizeof(decstring[]))
+    cp = decstring = mpdAlloc(mem, sizeof(decstring[]))
     if cp == nil:
       result[] = nil
       return -1
-    if mpd_isnegative(dec):
+    if mpdIsnegative(dec):
       inc(cp)[] = '-'
-    elif flags and MPD_FMT_SIGN_SPACE:
+    elif flags and mpd_Fmt_Sign_Space:
       inc(cp)[] = ' '
-    elif flags and MPD_FMT_SIGN_PLUS:
+    elif flags and mpd_Fmt_Sign_Plus:
       inc(cp)[] = '+'
-    if mpd_isnan(dec):
-      if mpd_isqnan(dec):
+    if mpdIsnan(dec):
+      if mpdIsqnan(dec):
         strcpy(cp, "NaN")
         inc(cp, 3)
       else:
@@ -417,8 +435,8 @@ proc _mpd_to_string*(result: cstringArray; dec: ptr mpd_t; flags: cint;
         inc(cp, 4)
       if dec.len > 0:
         ##  diagnostic code
-        cp = coeff_to_string(cp, dec)
-    elif mpd_isinfinite(dec):
+        cp = coeffToString(cp, dec)
+    elif mpdIsinfinite(dec):
       strcpy(cp, "Infinity")
       inc(cp, 8)
     else:
@@ -451,14 +469,14 @@ proc _mpd_to_string*(result: cstringArray; dec: ptr mpd_t; flags: cint;
     ##     `- dplace <= 0
     ##
     ldigits = dec.digits + dec.exp
-    if flags and MPD_FMT_EXP:
+    if flags and mpd_Fmt_Exp:
       nil
-    elif flags and MPD_FMT_FIXED or (dec.exp <= 0 and ldigits > -6):
+    elif flags and mpd_Fmt_Fixed or (dec.exp <= 0 and ldigits > -6):
       ##  MPD_FMT_FIXED: always use fixed point notation.
       ##  MPD_FMT_TOSCI, MPD_FMT_TOENG: for a certain range,
       ##  override exponent notation.
       dplace = ldigits
-    elif flags and MPD_FMT_TOENG: ##
+    elif flags and mpd_Fmt_Toeng: ##
                               ##  Basic space requirements:
                               ##
                               ##  [-][.][coeffdigits][E][-][expdigits+1][%]['\0']
@@ -466,32 +484,32 @@ proc _mpd_to_string*(result: cstringArray; dec: ptr mpd_t; flags: cint;
                               ##  If the decimal point lies outside of the coefficient digits,
                               ##  space is adjusted accordingly.
                               ##
-      if mpd_iszero(dec):
+      if mpdIszero(dec):
         ##  If the exponent is divisible by three,
         ##  dplace = 1. Otherwise, move dplace one
         ##  or two places to the left.
-        dplace = -1 + mod_mpd_ssize_t(dec.exp + 2, 3)
+        dplace = -1 + modMpdSsizeT(dec.exp + 2, 3)
       else:
         ##  ldigits-1 is the adjusted exponent, which
         ##  should be divisible by three. If not, move
         ##  dplace one or two places to the right.
-        inc(dplace, mod_mpd_ssize_t(ldigits - 1, 3))
+        inc(dplace, modMpdSsizeT(ldigits - 1, 3))
     if dplace <= 0:
       mem = -dplace + dec.digits + 2
     elif dplace >= dec.digits:
       mem = dplace
     else:
       mem = dec.digits
-    inc(mem, (MPD_EXPDIGITS + 1 + 6))
-    cp = decstring = mpd_alloc(mem, sizeof(decstring[]))
+    inc(mem, (mpd_Expdigits + 1 + 6))
+    cp = decstring = mpdAlloc(mem, sizeof(decstring[]))
     if cp == nil:
       result[] = nil
       return -1
-    if mpd_isnegative(dec):
+    if mpdIsnegative(dec):
       inc(cp)[] = '-'
-    elif flags and MPD_FMT_SIGN_SPACE:
+    elif flags and mpd_Fmt_Sign_Space:
       inc(cp)[] = ' '
-    elif flags and MPD_FMT_SIGN_PLUS:
+    elif flags and mpd_Fmt_Sign_Plus:
       inc(cp)[] = '+'
     if dplace <= 0:
       ##  space: -dplace+dec->digits+2
@@ -501,17 +519,17 @@ proc _mpd_to_string*(result: cstringArray; dec: ptr mpd_t; flags: cint;
       while k < -dplace:
         inc(cp)[] = '0'
         inc(k)
-      cp = coeff_to_string(cp, dec)
+      cp = coeffToString(cp, dec)
     elif dplace >= dec.digits:
       ##  space: dplace
-      cp = coeff_to_string(cp, dec)
+      cp = coeffToString(cp, dec)
       k = 0
       while k < dplace - dec.digits:
         inc(cp)[] = '0'
         inc(k)
     else:
       ##  space: dec->digits+1
-      cp = coeff_to_string_dot(cp, cp + dplace, dec)
+      cp = coeffToStringDot(cp, cp + dplace, dec)
     ##
     ##  Conditions for printing an exponent:
     ##
@@ -519,46 +537,46 @@ proc _mpd_to_string*(result: cstringArray; dec: ptr mpd_t; flags: cint;
     ##    MPD_FMT_FIXED:                never (ldigits == dplace)
     ##    MPD_FMT_EXP:                  always
     ##
-    if ldigits != dplace or flags and MPD_FMT_EXP:
+    if ldigits != dplace or flags and mpd_Fmt_Exp:
       ##  space: expdigits+2
-      inc(cp)[] = if (flags and MPD_FMT_UPPER): 'E' else: 'e'
-      cp = exp_to_string(cp, ldigits - dplace)
-  if flags and MPD_FMT_PERCENT:
+      inc(cp)[] = if (flags and mpd_Fmt_Upper): 'E' else: 'e'
+      cp = expToString(cp, ldigits - dplace)
+  if flags and mpd_Fmt_Percent:
     inc(cp)[] = '%'
   assert(cp < decstring + mem)
-  assert(cp - decstring < MPD_SSIZE_MAX)
+  assert(cp - decstring < mpd_Ssize_Max)
   cp[] = '\x00'
   result[] = decstring
-  return (mpd_ssize_t)(cp - decstring)
+  return (mpdSsizeT)(cp - decstring)
 
-proc mpd_to_sci*(dec: ptr mpd_t; fmt: cint): cstring =
+proc mpdToSci*(dec: ptr MpdT; fmt: cint): cstring =
   var res: cstring
-  var flags: cint = MPD_FMT_TOSCI
-  flags = flags or if fmt: MPD_FMT_UPPER else: MPD_FMT_LOWER
-  cast[nil](_mpd_to_string(addr(res), dec, flags, MPD_DEFAULT_DOTPLACE))
+  var flags: cint = mpd_Fmt_Tosci
+  flags = flags or if fmt: mpd_Fmt_Upper else: mpd_Fmt_Lower
+  cast[nil](mpdToString(addr(res), dec, flags, mpd_Default_Dotplace))
   return res
 
-proc mpd_to_eng*(dec: ptr mpd_t; fmt: cint): cstring =
+proc mpdToEng*(dec: ptr MpdT; fmt: cint): cstring =
   var res: cstring
-  var flags: cint = MPD_FMT_TOENG
-  flags = flags or if fmt: MPD_FMT_UPPER else: MPD_FMT_LOWER
-  cast[nil](_mpd_to_string(addr(res), dec, flags, MPD_DEFAULT_DOTPLACE))
+  var flags: cint = mpd_Fmt_Toeng
+  flags = flags or if fmt: mpd_Fmt_Upper else: mpd_Fmt_Lower
+  cast[nil](mpdToString(addr(res), dec, flags, mpd_Default_Dotplace))
   return res
 
-proc mpd_to_sci_size*(res: cstringArray; dec: ptr mpd_t; fmt: cint): mpd_ssize_t =
-  var flags: cint = MPD_FMT_TOSCI
-  flags = flags or if fmt: MPD_FMT_UPPER else: MPD_FMT_LOWER
-  return _mpd_to_string(res, dec, flags, MPD_DEFAULT_DOTPLACE)
+proc mpdToSciSize*(res: cstringArray; dec: ptr MpdT; fmt: cint): MpdSsizeT =
+  var flags: cint = mpd_Fmt_Tosci
+  flags = flags or if fmt: mpd_Fmt_Upper else: mpd_Fmt_Lower
+  return mpdToString(res, dec, flags, mpd_Default_Dotplace)
 
-proc mpd_to_eng_size*(res: cstringArray; dec: ptr mpd_t; fmt: cint): mpd_ssize_t =
-  var flags: cint = MPD_FMT_TOENG
-  flags = flags or if fmt: MPD_FMT_UPPER else: MPD_FMT_LOWER
-  return _mpd_to_string(res, dec, flags, MPD_DEFAULT_DOTPLACE)
+proc mpdToEngSize*(res: cstringArray; dec: ptr MpdT; fmt: cint): MpdSsizeT =
+  var flags: cint = mpd_Fmt_Toeng
+  flags = flags or if fmt: mpd_Fmt_Upper else: mpd_Fmt_Lower
+  return mpdToString(res, dec, flags, mpd_Default_Dotplace)
 
 ##  Copy a single UTF-8 char to dest. See: The Unicode Standard, version 5.2,
 ##    chapter 3.9: Well-formed UTF-8 byte sequences.
 
-proc _mpd_copy_utf8*(dest: array[5, char]; s: cstring): cint =
+proc mpdCopyUtf8*(dest: array[5, char]; s: cstring): cint =
   var cp: ptr cuchar = cast[ptr cuchar](s)
   var
     lb: cuchar
@@ -625,9 +643,9 @@ proc _mpd_copy_utf8*(dest: array[5, char]; s: cstring): cint =
   dest[0] = '\x00'
   return -1
 
-proc mpd_validate_lconv*(spec: ptr mpd_spec_t): cint =
+proc mpdValidateLconv*(spec: ptr MpdSpecT): cint =
   var n: csize
-  when CHAR_MAX == SCHAR_MAX:
+  when char_Max == schar_Max:
     var cp: cstring = spec.grouping
     while cp[] != '\x00':
       if inc(cp)[] < 0:
@@ -639,13 +657,13 @@ proc mpd_validate_lconv*(spec: ptr mpd_spec_t): cint =
     return -1
   return 0
 
-proc mpd_parse_fmt_str*(spec: ptr mpd_spec_t; fmt: cstring; caps: cint): cint =
+proc mpdParseFmtStr*(spec: ptr MpdSpecT; fmt: cstring; caps: cint): cint =
   var cp: cstring = cast[cstring](fmt)
   var
-    have_align: cint = 0
+    haveAlign: cint = 0
     n: cint
   ##  defaults
-  spec.min_width = 0
+  spec.minWidth = 0
   spec.prec = -1
   spec.`type` = if caps: 'G' else: 'g'
   spec.align = '>'
@@ -654,27 +672,27 @@ proc mpd_parse_fmt_str*(spec: ptr mpd_spec_t; fmt: cstring; caps: cint): cint =
   spec.sep = ""
   spec.grouping = ""
   ##  presume that the first character is a UTF-8 fill character
-  if (n = _mpd_copy_utf8(spec.fill, cp)) < 0:
+  if (n = mpdCopyUtf8(spec.fill, cp)) < 0:
     return 0
   if cp[] and
       ((cp + n)[] == '<' or (cp + n)[] == '>' or (cp + n)[] == '=' or (cp + n)[] == '^'):
     inc(cp, n)
     spec.align = inc(cp)[]
-    have_align = 1
+    haveAlign = 1
   else:
     ##  default fill character
     spec.fill[0] = ' '
     spec.fill[1] = '\x00'
     if cp[] == '<' or cp[] == '>' or cp[] == '=' or cp[] == '^':
       spec.align = inc(cp)[]
-      have_align = 1
+      haveAlign = 1
   ##  sign formatting
   if cp[] == '+' or cp[] == '-' or cp[] == ' ':
     spec.sign = inc(cp)[]
   if cp[] == '0':
     ##  zero padding implies alignment, which should not be
     ##  specified twice.
-    if have_align:
+    if haveAlign:
       return 0
     spec.align = 'z'
     spec.fill[0] = inc(cp)[]
@@ -683,8 +701,8 @@ proc mpd_parse_fmt_str*(spec: ptr mpd_spec_t; fmt: cstring; caps: cint): cint =
     if cp[] == '0':
       return 0
     errno = 0
-    spec.min_width = mpd_strtossize(cp, addr(cp), 10)
-    if errno == ERANGE or errno == EINVAL:
+    spec.minWidth = mpdStrtossize(cp, addr(cp), 10)
+    if errno == erange or errno == einval:
       return 0
   if cp[] == ',':
     spec.dot = "."
@@ -696,25 +714,25 @@ proc mpd_parse_fmt_str*(spec: ptr mpd_spec_t; fmt: cstring; caps: cint): cint =
     if not isdigit(cast[cuchar](cp[])):
       return 0
     errno = 0
-    spec.prec = mpd_strtossize(cp, addr(cp), 10)
-    if errno == ERANGE or errno == EINVAL:
+    spec.prec = mpdStrtossize(cp, addr(cp), 10)
+    if errno == erange or errno == einval:
       return 0
   if cp[] == 'E' or cp[] == 'e' or cp[] == 'F' or cp[] == 'f' or cp[] == 'G' or cp[] == 'g' or
       cp[] == '%':
     spec.`type` = inc(cp)[]
   elif cp[] == 'N' or cp[] == 'n':   ##  check correctness
     ##  locale specific conversion
-    var lc: ptr lconv
+    var lc: ptr Lconv
     ##  separator has already been specified
     if spec.sep[]:
       return 0
     spec.`type` = inc(cp)[]
     spec.`type` = if (spec.`type` == 'N'): 'G' else: 'g'
     lc = localeconv()
-    spec.dot = lc.decimal_point
-    spec.sep = lc.thousands_sep
+    spec.dot = lc.decimalPoint
+    spec.sep = lc.thousandsSep
     spec.grouping = lc.grouping
-    if mpd_validate_lconv(spec) < 0:
+    if mpdValidateLconv(spec) < 0:
       return 0
       ##  GCOV_NOT_REACHED
   if cp[] != '\x00':
@@ -730,32 +748,32 @@ proc mpd_parse_fmt_str*(spec: ptr mpd_spec_t; fmt: cstring; caps: cint): cint =
 ##  Multibyte string
 
 type
-  mpd_mbstr_t* {.bycopy.} = object
-    nbytes*: mpd_ssize_t       ##  length in bytes
-    nchars*: mpd_ssize_t       ##  length in chars
-    cur*: mpd_ssize_t          ##  current write index
+  MpdMbstrT* {.bycopy.} = object
+    nbytes*: MpdSsizeT         ##  length in bytes
+    nchars*: MpdSsizeT         ##  length in chars
+    cur*: MpdSsizeT            ##  current write index
     data*: cstring
 
 
-proc _mpd_bcopy*(dest: cstring; src: cstring; n: mpd_ssize_t) {.inline.} =
+proc mpdBcopy*(dest: cstring; src: cstring; n: MpdSsizeT) {.inline.} =
   while dec(n) >= 0:
     dest[n] = src[n]
 
-proc _mbstr_copy_char*(dest: ptr mpd_mbstr_t; src: cstring; n: mpd_ssize_t) {.inline.} =
+proc mbstrCopyChar*(dest: ptr MpdMbstrT; src: cstring; n: MpdSsizeT) {.inline.} =
   inc(dest.nbytes, n)
   inc(dest.nchars, (if n > 0: 1 else: 0))
   dec(dest.cur, n)
   if dest.data != nil:
-    _mpd_bcopy(dest.data + dest.cur, src, n)
+    mpdBcopy(dest.data + dest.cur, src, n)
 
-proc _mbstr_copy_ascii*(dest: ptr mpd_mbstr_t; src: cstring; n: mpd_ssize_t) {.inline.} =
+proc mbstrCopyAscii*(dest: ptr MpdMbstrT; src: cstring; n: MpdSsizeT) {.inline.} =
   inc(dest.nbytes, n)
   inc(dest.nchars, n)
   dec(dest.cur, n)
   if dest.data != nil:
-    _mpd_bcopy(dest.data + dest.cur, src, n)
+    mpdBcopy(dest.data + dest.cur, src, n)
 
-proc _mbstr_copy_pad*(dest: ptr mpd_mbstr_t; n: mpd_ssize_t) {.inline.} =
+proc mbstrCopyPad*(dest: ptr MpdMbstrT; n: MpdSsizeT) {.inline.} =
   inc(dest.nbytes, n)
   inc(dest.nchars, n)
   dec(dest.cur, n)
@@ -780,47 +798,46 @@ proc _mbstr_copy_pad*(dest: ptr mpd_mbstr_t; n: mpd_ssize_t) {.inline.} =
 ##  reverse order, starting with the rest of the numeric string.
 ##
 
-proc _mpd_add_sep_dot*(dest: ptr mpd_mbstr_t; sign: cstring; src: cstring;
-                      n_src: mpd_ssize_t; dot: cstring; rest: cstring;
-                      n_rest: mpd_ssize_t; spec: ptr mpd_spec_t) =
+proc mpdAddSepDot*(dest: ptr MpdMbstrT; sign: cstring; src: cstring; nSrc: MpdSsizeT;
+                  dot: cstring; rest: cstring; nRest: MpdSsizeT; spec: ptr MpdSpecT) =
   ##  location of optional sign
   ##  integer part and length
   ##  location of optional decimal point
   ##  remaining part and length
   var
-    n_sep: mpd_ssize_t
-    n_sign: mpd_ssize_t
-    consume: mpd_ssize_t
+    nSep: MpdSsizeT
+    nSign: MpdSsizeT
+    consume: MpdSsizeT
   var g: cstring
   var pad: cint = 0
-  n_sign = if sign: 1 else: 0
-  n_sep = cast[mpd_ssize_t](strlen(spec.sep))
+  nSign = if sign: 1 else: 0
+  nSep = cast[MpdSsizeT](strlen(spec.sep))
   ##  Initial write index: set to location of '\0' in the output string.
   ##  Irrelevant for the first run.
   dest.cur = dest.nbytes
   dest.nbytes = dest.nchars = 0
-  _mbstr_copy_ascii(dest, rest, n_rest)
+  mbstrCopyAscii(dest, rest, nRest)
   if dot:
-    _mbstr_copy_char(dest, dot, cast[mpd_ssize_t](strlen(dot)))
+    mbstrCopyChar(dest, dot, cast[MpdSsizeT](strlen(dot)))
   g = spec.grouping
   consume = g[]
   while 1:
     ##  If the group length is 0 or CHAR_MAX or greater than the
     ##  number of source bytes, consume all remaining bytes.
-    if g[] == 0 or g[] == CHAR_MAX or consume > n_src:
-      consume = n_src
-    dec(n_src, consume)
+    if g[] == 0 or g[] == char_Max or consume > nSrc:
+      consume = nSrc
+    dec(nSrc, consume)
     if pad:
-      _mbstr_copy_pad(dest, consume)
+      mbstrCopyPad(dest, consume)
     else:
-      _mbstr_copy_ascii(dest, src + n_src, consume)
-    if n_src == 0:
+      mbstrCopyAscii(dest, src + nSrc, consume)
+    if nSrc == 0:
       ##  Either the real source of intpart digits or the virtual
       ##  source of padding zeros is exhausted.
-      if spec.align == 'z' and dest.nchars + n_sign < spec.min_width:
+      if spec.align == 'z' and dest.nchars + nSign < spec.minWidth:
         ##  Zero padding is set and length < min_width:
         ##  Generate n_src additional characters.
-        n_src = spec.min_width - (dest.nchars + n_sign)
+        nSrc = spec.minWidth - (dest.nchars + nSign)
         ##  Next iteration:
         ##    case *g == 0 || *g == CHAR_MAX:
         ##       consume all padding characters
@@ -833,19 +850,19 @@ proc _mpd_add_sep_dot*(dest: ptr mpd_mbstr_t; sign: cstring; src: cstring;
         pad = 1
         continue
       break
-    if n_sep > 0:
+    if nSep > 0:
       ##  If padding is switched on, separators are counted
       ##  as padding characters. This rule does not apply if
       ##  the separator would be the first character of the
       ##  result string.
-      if pad and n_src > 1:
-        dec(n_src, 1)
-      _mbstr_copy_char(dest, spec.sep, n_sep)
+      if pad and nSrc > 1:
+        dec(nSrc, 1)
+      mbstrCopyChar(dest, spec.sep, nSep)
     if g[] and (g + 1)[]:
       inc(g)
     consume = g[]
   if sign:
-    _mbstr_copy_ascii(dest, sign, 1)
+    mbstrCopyAscii(dest, sign, 1)
   if dest.data:
     dest.data[dest.nbytes] = '\x00'
 
@@ -869,8 +886,7 @@ proc _mpd_add_sep_dot*(dest: ptr mpd_mbstr_t; sign: cstring; src: cstring;
 ##          result->nchars := number of characters (possibly UTF-8)
 ##
 
-proc _mpd_apply_lconv*(result: ptr mpd_mbstr_t; spec: ptr mpd_spec_t;
-                      status: ptr uint32_t): cint =
+proc mpdApplyLconv*(result: ptr MpdMbstrT; spec: ptr MpdSpecT; status: ptr uint32T): cint =
   var
     sign: cstring = nil
     intpart: cstring = nil
@@ -880,8 +896,8 @@ proc _mpd_apply_lconv*(result: ptr mpd_mbstr_t; spec: ptr mpd_spec_t;
     dp: cstring
   var decstring: cstring
   var
-    n_int: mpd_ssize_t
-    n_rest: mpd_ssize_t
+    nInt: MpdSsizeT
+    nRest: MpdSsizeT
   ##  original numeric string
   dp = result.data
   ##  sign
@@ -891,89 +907,89 @@ proc _mpd_apply_lconv*(result: ptr mpd_mbstr_t; spec: ptr mpd_spec_t;
   intpart = inc(dp)
   while isdigit(cast[cuchar](dp[])):
     inc(dp)
-  n_int = (mpd_ssize_t)(dp - intpart)
+  nInt = (mpdSsizeT)(dp - intpart)
   ##  decimal point
   if dp[] == '.':
     inc(dp)
     dot = spec.dot
   rest = dp
-  n_rest = result.nbytes - (mpd_ssize_t)(dp - result.data)
+  nRest = result.nbytes - (mpdSsizeT)(dp - result.data)
   if dot == nil and (spec.sep[] == '\x00' or spec.grouping[] == '\x00'):
     ##  _mpd_add_sep_dot() would not change anything
     return 1
   decstring = result.data
   result.data = nil
-  _mpd_add_sep_dot(result, sign, intpart, n_int, dot, rest, n_rest, spec)
-  result.data = mpd_alloc(result.nbytes + 1, 1)
+  mpdAddSepDot(result, sign, intpart, nInt, dot, rest, nRest, spec)
+  result.data = mpdAlloc(result.nbytes + 1, 1)
   if result.data == nil:
-    status[] = status[] or MPD_Malloc_error
-    mpd_free(decstring)
+    status[] = status[] or mPD_MallocError
+    mpdFree(decstring)
     return 0
-  _mpd_add_sep_dot(result, sign, intpart, n_int, dot, rest, n_rest, spec)
-  mpd_free(decstring)
+  mpdAddSepDot(result, sign, intpart, nInt, dot, rest, nRest, spec)
+  mpdFree(decstring)
   return 1
 
 ##  Add padding to the formatted string if necessary.
 
-proc _mpd_add_pad*(result: ptr mpd_mbstr_t; spec: ptr mpd_spec_t; status: ptr uint32_t): cint =
-  if result.nchars < spec.min_width:
+proc mpdAddPad*(result: ptr MpdMbstrT; spec: ptr MpdSpecT; status: ptr uint32T): cint =
+  if result.nchars < spec.minWidth:
     var
-      add_chars: mpd_ssize_t
-      add_bytes: mpd_ssize_t
+      addChars: MpdSsizeT
+      addBytes: MpdSsizeT
     var
       lpad: csize = 0
       rpad: csize = 0
     var
-      n_fill: csize
+      nFill: csize
       len: csize
       i: csize
       j: csize
     var align: char = spec.align
-    var err: uint8_t = 0
+    var err: uint8T = 0
     var cp: cstring
-    n_fill = strlen(spec.fill)
-    add_chars = (spec.min_width - result.nchars)
+    nFill = strlen(spec.fill)
+    addChars = (spec.minWidth - result.nchars)
     ##  max value: MPD_MAX_PREC * 4
-    add_bytes = add_chars * cast[mpd_ssize_t](n_fill)
-    cp = result.data = mpd_realloc(result.data, result.nbytes + add_bytes + 1,
-                               sizeof(result.data[]), addr(err))
+    addBytes = addChars * cast[MpdSsizeT](nFill)
+    cp = result.data = mpdRealloc(result.data, result.nbytes + addBytes + 1,
+                              sizeof(result.data[]), addr(err))
     if err:
-      status[] = status[] or MPD_Malloc_error
-      mpd_free(result.data)
+      status[] = status[] or mPD_MallocError
+      mpdFree(result.data)
       return 0
     if align == 'z':
       align = '='
     if align == '<':
-      rpad = add_chars
+      rpad = addChars
     elif align == '>' or align == '=':
-      lpad = add_chars
+      lpad = addChars
     else:
       ##  align == '^'
-      lpad = add_chars div 2
-      rpad = add_chars - lpad
+      lpad = addChars div 2
+      rpad = addChars - lpad
     len = result.nbytes
     if align == '=' and (cp[] == '-' or cp[] == '+' or cp[] == ' '):
       ##  leave sign in the leading position
       inc(cp)
       dec(len)
-    memmove(cp + n_fill * lpad, cp, len)
+    memmove(cp + nFill * lpad, cp, len)
     i = 0
     while i < lpad:
       j = 0
-      while j < n_fill:
-        cp[i * n_fill + j] = spec.fill[j]
+      while j < nFill:
+        cp[i * nFill + j] = spec.fill[j]
         inc(j)
       inc(i)
-    inc(cp, (n_fill * lpad + len))
+    inc(cp, (nFill * lpad + len))
     i = 0
     while i < rpad:
       j = 0
-      while j < n_fill:
-        cp[i * n_fill + j] = spec.fill[j]
+      while j < nFill:
+        cp[i * nFill + j] = spec.fill[j]
         inc(j)
       inc(i)
-    inc(result.nbytes, add_bytes)
-    inc(result.nchars, add_chars)
+    inc(result.nbytes, addBytes)
+    inc(result.nchars, addChars)
     result.data[result.nbytes] = '\x00'
   return 1
 
@@ -982,22 +998,21 @@ proc _mpd_add_pad*(result: ptr mpd_mbstr_t; spec: ptr mpd_spec_t; status: ptr ui
 ##    If result->digits would exceed MPD_MAX_PREC+1, MPD_Invalid_operation
 ##    is set and the result is NaN.
 
-proc _mpd_round*(result: ptr mpd_t; a: ptr mpd_t; prec: mpd_ssize_t;
-                ctx: ptr mpd_context_t; status: ptr uint32_t) {.inline.} =
-  var exp: mpd_ssize_t = a.exp + a.digits - prec
+proc mpdRound*(result: ptr MpdT; a: ptr MpdT; prec: MpdSsizeT; ctx: ptr MpdContextT;
+              status: ptr uint32T) {.inline.} =
+  var exp: MpdSsizeT = a.exp + a.digits - prec
   if prec <= 0:
-    mpd_seterror(result, MPD_Invalid_operation, status)
+    mpdSeterror(result, mPD_InvalidOperation, status)
     ##  GCOV_NOT_REACHED
     return
     ##  GCOV_NOT_REACHED
-  if mpd_isspecial(a) or mpd_iszero(a):
-    mpd_qcopy(result, a, status)
+  if mpdIsspecial(a) or mpdIszero(a):
+    mpdQcopy(result, a, status)
+    var `return`: Gcov_Not_Reached
     ##  GCOV_NOT_REACHED
-    return
-    ##  GCOV_NOT_REACHED
-  mpd_qrescale_fmt(result, a, exp, ctx, status)
+  mpdQrescaleFmt(result, a, exp, ctx, status)
   if result.digits > prec:
-    mpd_qrescale_fmt(result, result, exp + 1, ctx, status)
+    mpdQrescaleFmt(result, result, exp + 1, ctx, status)
 
 ##
 ##  Return the string representation of an mpd_t, formatted according to 'spec'.
@@ -1005,26 +1020,26 @@ proc _mpd_round*(result: ptr mpd_t; a: ptr mpd_t; prec: mpd_ssize_t;
 ##  as usual. This function is quiet.
 ##
 
-proc mpd_qformat_spec*(dec: ptr mpd_t; spec: ptr mpd_spec_t; ctx: ptr mpd_context_t;
-                      status: ptr uint32_t): cstring =
-  var dt: array[MPD_MINALLOC_MAX, mpd_uint_t]
-  var tmp: mpd_t = [MPD_STATIC or MPD_STATIC_DATA, 0, 0, 0, MPD_MINALLOC_MAX, dt]
-  var dplace: mpd_ssize_t = MPD_DEFAULT_DOTPLACE
-  var result: mpd_mbstr_t
-  var stackspec: mpd_spec_t
+proc mpdQformatSpec*(dec: ptr MpdT; spec: ptr MpdSpecT; ctx: ptr MpdContextT;
+                    status: ptr uint32T): cstring =
+  var dt: array[mpd_Minalloc_Max, MpdUintT]
+  var tmp: MpdT = [mpd_Static or mpd_Static_Data, 0, 0, 0, mpd_Minalloc_Max, dt]
+  var dplace: MpdSsizeT = mpd_Default_Dotplace
+  var result: MpdMbstrT
+  var stackspec: MpdSpecT
   var `type`: char = spec.`type`
   var flags: cint = 0
-  if spec.min_width > MPD_MAX_PREC:
-    status[] = status[] or MPD_Invalid_operation
+  if spec.minWidth > mpd_Max_Prec:
+    status[] = status[] or mPD_InvalidOperation
     return nil
   if isupper(cast[cuchar](`type`)):
     `type` = cast[char](tolower(cast[cuchar](`type`)))
-    flags = flags or MPD_FMT_UPPER
+    flags = flags or mpd_Fmt_Upper
   if spec.sign == ' ':
-    flags = flags or MPD_FMT_SIGN_SPACE
+    flags = flags or mpd_Fmt_Sign_Space
   elif spec.sign == '+':
-    flags = flags or MPD_FMT_SIGN_PLUS
-  if mpd_isspecial(dec):
+    flags = flags or mpd_Fmt_Sign_Plus
+  if mpdIsspecial(dec):
     if spec.align == 'z':
       stackspec = spec[]
       stackspec.fill[0] = ' '
@@ -1034,53 +1049,53 @@ proc mpd_qformat_spec*(dec: ptr mpd_t; spec: ptr mpd_spec_t; ctx: ptr mpd_contex
     assert(strlen(spec.fill) == 1)
     ##  annotation for scan-build
     if `type` == '%':
-      flags = flags or MPD_FMT_PERCENT
+      flags = flags or mpd_Fmt_Percent
   else:
-    var workstatus: uint32_t = 0
-    var prec: mpd_ssize_t
+    var workstatus: uint32T = 0
+    var prec: MpdSsizeT
     case `type`
     of 'g':
-      flags = flags or MPD_FMT_TOSCI
+      flags = flags or mpd_Fmt_Tosci
     of 'e':
-      flags = flags or MPD_FMT_EXP
+      flags = flags or mpd_Fmt_Exp
     of '%':
-      flags = flags or MPD_FMT_PERCENT
-      if not mpd_qcopy(addr(tmp), dec, status):
+      flags = flags or mpd_Fmt_Percent
+      if not mpdQcopy(addr(tmp), dec, status):
         return nil
       inc(tmp.exp, 2)
       dec = addr(tmp)
       `type` = 'f'
       ##  fall through
     of 'f':
-      flags = flags or MPD_FMT_FIXED
+      flags = flags or mpd_Fmt_Fixed
     else:
       abort()
       ##  debug: GCOV_NOT_REACHED
     if spec.prec >= 0:
-      if spec.prec > MPD_MAX_PREC:
-        status[] = status[] or MPD_Invalid_operation
+      if spec.prec > mpd_Max_Prec:
+        status[] = status[] or mPD_InvalidOperation
         break error
       case `type`
       of 'g':
         prec = if (spec.prec == 0): 1 else: spec.prec
         if dec.digits > prec:
-          _mpd_round(addr(tmp), dec, prec, ctx, addr(workstatus))
+          mpdRound(addr(tmp), dec, prec, ctx, addr(workstatus))
           dec = addr(tmp)
       of 'e':
-        if mpd_iszero(dec):
+        if mpdIszero(dec):
           dplace = 1 - spec.prec
         else:
-          _mpd_round(addr(tmp), dec, spec.prec + 1, ctx, addr(workstatus))
+          mpdRound(addr(tmp), dec, spec.prec + 1, ctx, addr(workstatus))
           dec = addr(tmp)
       of 'f':
-        mpd_qrescale(addr(tmp), dec, -spec.prec, ctx, addr(workstatus))
+        mpdQrescale(addr(tmp), dec, -spec.prec, ctx, addr(workstatus))
         dec = addr(tmp)
     if `type` == 'f':
-      if mpd_iszero(dec) and dec.exp > 0:
-        mpd_qrescale(addr(tmp), dec, 0, ctx, addr(workstatus))
+      if mpdIszero(dec) and dec.exp > 0:
+        mpdQrescale(addr(tmp), dec, 0, ctx, addr(workstatus))
         dec = addr(tmp)
-    if workstatus and MPD_Errors:
-      status[] = status[] or (workstatus and MPD_Errors)
+    if workstatus and mPD_Errors:
+      status[] = status[] or (workstatus and mPD_Errors)
       break error
   ##
   ##  At this point, for all scaled or non-scaled decimals:
@@ -1094,36 +1109,35 @@ proc mpd_qformat_spec*(dec: ptr mpd_t; spec: ptr mpd_spec_t; ctx: ptr mpd_contex
   ##         case 'e': MAX_PREC+36
   ##         case 'f': 2*MPD_MAX_PREC+30
   ##
-  result.nbytes = _mpd_to_string(addr(result.data), dec, flags, dplace)
+  result.nbytes = mpdToString(addr(result.data), dec, flags, dplace)
   result.nchars = result.nbytes
   if result.nbytes < 0:
-    status[] = status[] or MPD_Malloc_error
+    status[] = status[] or mPD_MallocError
     break error
-  if spec.dot[] != '\x00' and not mpd_isspecial(dec):
-    if result.nchars > MPD_MAX_PREC + 36:
+  if spec.dot[] != '\x00' and not mpdIsspecial(dec):
+    if result.nchars > mpd_Max_Prec + 36:
       ##  Since a group length of one is not explicitly
       ##  disallowed, ensure that it is always possible to
       ##  insert a four byte separator after each digit.
-      status[] = status[] or MPD_Invalid_operation
-      mpd_free(result.data)
+      status[] = status[] or mPD_InvalidOperation
+      mpdFree(result.data)
       break error
-    if not _mpd_apply_lconv(addr(result), spec, status):
+    if not mpdApplyLconv(addr(result), spec, status):
       break error
-  if spec.min_width:
-    if not _mpd_add_pad(addr(result), spec, status):
+  if spec.minWidth:
+    if not mpdAddPad(addr(result), spec, status):
       break error
-  mpd_del(addr(tmp))
+  mpdDel(addr(tmp))
   return result.data
-  mpd_del(addr(tmp))
+  mpdDel(addr(tmp))
   return nil
 
-proc mpd_qformat*(dec: ptr mpd_t; fmt: cstring; ctx: ptr mpd_context_t;
-                 status: ptr uint32_t): cstring =
-  var spec: mpd_spec_t
-  if not mpd_parse_fmt_str(addr(spec), fmt, 1):
-    status[] = status[] or MPD_Invalid_operation
+proc mpdQformat*(dec: ptr MpdT; fmt: cstring; ctx: ptr MpdContextT; status: ptr uint32T): cstring =
+  var spec: MpdSpecT
+  if not mpdParseFmtStr(addr(spec), fmt, 1):
+    status[] = status[] or mPD_InvalidOperation
     return nil
-  return mpd_qformat_spec(dec, addr(spec), ctx, status)
+  return mpdQformatSpec(dec, addr(spec), ctx, status)
 
 ##
 ##  The specification has a *condition* called Invalid_operation and an
@@ -1139,12 +1153,12 @@ proc mpd_qformat*(dec: ptr mpd_t; fmt: cstring; ctx: ptr mpd_context_t;
 ##  denotes the IEEE signal.
 ##
 
-var mpd_flag_string*: array[MPD_NUM_FLAGS, cstring] = ["Clamped", "Conversion_syntax",
+var mpdFlagString*: array[mpd_Num_Flags, cstring] = ["Clamped", "Conversion_syntax",
     "Division_by_zero", "Division_impossible", "Division_undefined", "Fpu_error",
     "Inexact", "Invalid_context", "Invalid_operation", "Malloc_error",
     "Not_implemented", "Overflow", "Rounded", "Subnormal", "Underflow"]
 
-var mpd_signal_string*: array[MPD_NUM_FLAGS, cstring] = ["Clamped",
+var mpdSignalString*: array[mpd_Num_Flags, cstring] = ["Clamped",
     "IEEE_Invalid_operation", "Division_by_zero", "IEEE_Invalid_operation",
     "IEEE_Invalid_operation", "IEEE_Invalid_operation", "Inexact",
     "IEEE_Invalid_operation", "IEEE_Invalid_operation", "IEEE_Invalid_operation",
@@ -1152,18 +1166,18 @@ var mpd_signal_string*: array[MPD_NUM_FLAGS, cstring] = ["Clamped",
 
 ##  print conditions to buffer, separated by spaces
 
-proc mpd_snprint_flags*(dest: cstring; nmemb: cint; flags: uint32_t): cint =
+proc mpdSnprintFlags*(dest: cstring; nmemb: cint; flags: uint32T): cint =
   var cp: cstring
   var
     n: cint
     j: cint
-  assert(nmemb >= MPD_MAX_FLAG_STRING)
+  assert(nmemb >= mpd_Max_Flag_String)
   dest[] = '\x00'
   cp = dest
   j = 0
-  while j < MPD_NUM_FLAGS:
+  while j < mpd_Num_Flags:
     if flags and (1 shl j):
-      n = snprintf(cp, nmemb, "%s ", mpd_flag_string[j])
+      n = snprintf(cp, nmemb, "%s ", mpdFlagString[j])
       if n < 0 or n >= nmemb:
         return -1
       inc(cp, n)
@@ -1175,23 +1189,23 @@ proc mpd_snprint_flags*(dest: cstring; nmemb: cint; flags: uint32_t): cint =
 
 ##  print conditions to buffer, in list form
 
-proc mpd_lsnprint_flags*(dest: cstring; nmemb: cint; flags: uint32_t;
-                        flag_string: ptr cstring): cint =
+proc mpdLsnprintFlags*(dest: cstring; nmemb: cint; flags: uint32T;
+                      flagString: ptr cstring): cint =
   var cp: cstring
   var
     n: cint
     j: cint
-  assert(nmemb >= MPD_MAX_FLAG_LIST)
-  if flag_string == nil:
-    flag_string = mpd_flag_string
+  assert(nmemb >= mpd_Max_Flag_List)
+  if flagString == nil:
+    flagString = mpdFlagString
   dest[] = '['
   (dest + 1)[] = '\x00'
   cp = dest + 1
   dec(nmemb)
   j = 0
-  while j < MPD_NUM_FLAGS:
+  while j < mpd_Num_Flags:
     if flags and (1 shl j):
-      n = snprintf(cp, nmemb, "%s, ", flag_string[j])
+      n = snprintf(cp, nmemb, "%s, ", flagString[j])
       if n < 0 or n >= nmemb:
         return -1
       inc(cp, n)
@@ -1207,29 +1221,29 @@ proc mpd_lsnprint_flags*(dest: cstring; nmemb: cint; flags: uint32_t;
 
 ##  print signals to buffer, in list form
 
-proc mpd_lsnprint_signals*(dest: cstring; nmemb: cint; flags: uint32_t;
-                          signal_string: ptr cstring): cint =
+proc mpdLsnprintSignals*(dest: cstring; nmemb: cint; flags: uint32T;
+                        signalString: ptr cstring): cint =
   var cp: cstring
   var
     n: cint
     j: cint
-  var ieee_invalid_done: cint = 0
-  assert(nmemb >= MPD_MAX_SIGNAL_LIST)
-  if signal_string == nil:
-    signal_string = mpd_signal_string
+  var ieeeInvalidDone: cint = 0
+  assert(nmemb >= mpd_Max_Signal_List)
+  if signalString == nil:
+    signalString = mpdSignalString
   dest[] = '['
   (dest + 1)[] = '\x00'
   cp = dest + 1
   dec(nmemb)
   j = 0
-  while j < MPD_NUM_FLAGS:
-    var f: uint32_t = flags and (1 shl j)
+  while j < mpd_Num_Flags:
+    var f: uint32T = flags and (1 shl j)
     if f:
-      if f and MPD_IEEE_Invalid_operation:
-        if ieee_invalid_done:
+      if f and mPD_IEEE_InvalidOperation:
+        if ieeeInvalidDone:
           continue
-        ieee_invalid_done = 1
-      n = snprintf(cp, nmemb, "%s, ", signal_string[j])
+        ieeeInvalidDone = 1
+      n = snprintf(cp, nmemb, "%s, ", signalString[j])
       if n < 0 or n >= nmemb:
         return -1
       inc(cp, n)
@@ -1245,22 +1259,28 @@ proc mpd_lsnprint_signals*(dest: cstring; nmemb: cint; flags: uint32_t;
 
 ##  The following two functions are mainly intended for debugging.
 
-proc mpd_fprint*(file: ptr FILE; dec: ptr mpd_t) =
+proc mpdFprint*(file: ptr File; dec: ptr MpdT) =
   var decstring: cstring
-  decstring = mpd_to_sci(dec, 1)
+  decstring = mpdToSci(dec, 1)
   if decstring != nil:
     fprintf(file, "%s\n", decstring)
-    mpd_free(decstring)
+    mpdFree(decstring)
   else:
     fputs("mpd_fprint: output error\n", file)
     ##  GCOV_NOT_REACHED
 
-proc mpd_print*(dec: ptr mpd_t) =
-  var decstring: cstring
-  decstring = mpd_to_sci(dec, 1)
-  if decstring != nil:
-    printf("%s\n", decstring)
-    mpd_free(decstring)
-  else:
-    fputs("mpd_fprint: output error\n", stderr)
-    ##  GCOV_NOT_REACHED
+##  C2NIM crashed on the next function:
+##
+##  void
+##  mpd_print(const mpd_t *dec)
+##  {
+##      char *decstring;
+##      decstring = mpd_to_sci(dec, 1);
+##      if (decstring != NULL) {
+##          printf("%s\n", decstring);
+##          mpd_free(decstring);
+##      }
+##      else {
+##          fputs("mpd_fprint: output error\n", stderr); /* GCOV_NOT_REACHED */
+##      }
+##  }
